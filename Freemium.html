@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planificador pilates</title>
+<script>
+try{
+  var _savedTheme = JSON.parse(localStorage.getItem('reformerPlanner_theme')||'null');
+  if(_savedTheme) document.documentElement.dataset.theme = _savedTheme;
+  var _savedLang = JSON.parse(localStorage.getItem('reformerPlanner_lang')||'null');
+  if(_savedLang) document.documentElement.lang = _savedLang;
+}catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1A1C21;
+    --surface:#212328;
+    --surface-2:#2A2C33;
+    --surface-3:#33363E;
+    --text:#EFF0F3;
+    --text-secondary:#A5A8AE;
+    --text-muted:#6E7178;
+    --border:#383B44;
+    --accent:#E3A23B;
+    --accent-text:#241B08;
+    --danger:#D1483B;
+    --radius:10px;
+    --block-group-tint: rgba(255,255,255,.015);
+    --spring-ligero:#D9EAD3;
+    --spring-ligero-fg:#274E13;
+    --spring-medio:#E8B23D;
+    --spring-medio-fg:#3D2A05;
+    --spring-pesado:#E08A3E;
+    --spring-pesado-fg:#40230A;
+    --spring-muypesado:#D1483B;
+    --spring-muypesado-fg:#FBE8E5;
+  }
+  :root[data-theme="light"]{
+    --bg:#F7F3EA;
+    --surface:#FFFFFF;
+    --surface-2:#F1EBDD;
+    --surface-3:#E6DEC9;
+    --text:#2B2822;
+    --text-secondary:#6B6455;
+    --text-muted:#9C9484;
+    --border:#DED4BE;
+    --block-group-tint: rgba(0,0,0,.025);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    padding-bottom:76px;
+    min-height:100vh;
+  }
+  h1,h2,h3,.num{font-family:'Space Grotesk',system-ui,sans-serif;}
+  input,select,textarea,button{font-family:inherit; font-size:14px; color:var(--text);}
+  .wrap{max-width:560px; margin:0 auto; padding:0 16px;}
+
+  .topbar{
+    position:sticky; top:0; z-index:20; background:var(--bg);
+    border-bottom:1px solid var(--border);
+    padding:14px 16px 12px;
+  }
+  .topbar .row{display:flex; justify-content:space-between; align-items:flex-end; gap:12px;}
+  .brand{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:0 0 2px;}
+  .plan-name{
+    background:transparent; border:none; color:var(--text); font-size:19px; font-weight:500;
+    padding:0; width:100%; outline:none;
+  }
+  .plan-date{background:transparent; border:none; color:var(--text-secondary); font-size:12px; padding:2px 0 0; outline:none;}
+  .total-box{text-align:right; flex-shrink:0;}
+  .total-box .label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin:0;}
+  .total-box .val{font-size:20px; font-weight:600; margin:0; color:var(--accent);}
+
+  .logo-holder{
+    width:40px; height:40px; flex-shrink:0; border-radius:9px;
+    border:1.5px dashed var(--border); color:var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .logo-holder svg{width:20px; height:20px;}
+
+  .tabbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:var(--surface); border-top:1px solid var(--border);
+    display:flex; padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  .tab{
+    flex:1; background:none; border:none; color:var(--text-muted);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:8px 4px; border-radius:8px; cursor:pointer;
+  }
+  .tab.active{color:var(--accent);}
+  .tab .ic{width:20px; height:20px;}
+  .tab span{font-size:11px;}
+
+  .view{display:none; padding:16px 0 24px;}
+  .view.active{display:block;}
+
+  .search-wrap{position:relative; margin-bottom:14px;}
+  .search-wrap input{
+    width:100%; padding:10px 12px 10px 36px; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius); outline:none;
+  }
+  .search-wrap input:focus{border-color:var(--accent);}
+  .search-icon{position:absolute; left:11px; top:11px; width:16px; height:16px; color:var(--text-muted);}
+  .results{
+    position:absolute; left:0; right:0; top:44px; background:var(--surface-2);
+    border:1px solid var(--border); border-radius:var(--radius); max-height:260px;
+    overflow:auto; z-index:15; display:none;
+  }
+  .result-item{padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:8px;}
+  .result-item:last-child{border-bottom:none;}
+  .result-item:active{background:var(--surface-3);}
+  .result-item .rname{font-weight:500;}
+  .result-item .rtags{font-size:11px; color:var(--text-muted); text-align:right;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:12px 14px; margin-bottom:10px; border-left:3px solid var(--surface-3);
+  }
+  .card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .card-head .name{font-weight:500; font-size:15px;}
+  .icon-btn{background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; display:flex;}
+  .icon-btn svg{width:17px; height:17px;}
+
+  .chip-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;}
+  .chip{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-secondary);
+    border-radius:20px; padding:5px 11px; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px;
+  }
+  .chip.on{background:rgba(227,162,59,.16); border-color:var(--accent); color:var(--accent);}
+  .chip svg{width:13px; height:13px;}
+
+  .field-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;}
+  .field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin-bottom:3px;}
+  .field input, .field select{width:100%; padding:7px 9px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; outline:none;}
+  .field input:focus, .field select:focus{border-color:var(--accent);}
+
+  .springs-row{display:flex; gap:5px; margin-bottom:8px;}
+  .spring{flex:1; border-radius:8px; padding:6px 2px; text-align:center;}
+  .spring .slabel{font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  .spring .sctrl{display:flex; align-items:center; justify-content:center; gap:6px; margin-top:2px;}
+  .spring button{background:none; border:none; padding:2px; cursor:pointer; display:flex;}
+  .spring button svg{width:12px; height:12px;}
+  .spring .sval{font-size:13px; font-weight:600; min-width:14px; font-family:'Space Grotesk',sans-serif;}
+
+  .section-label{font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin:0 0 6px;}
+
+  .notes-input{
+    width:100%; padding:8px 10px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:8px; outline:none; color:var(--text-secondary);
+    font-family:inherit; line-height:1.45; resize:vertical; overflow:hidden;
+  }
+  .notes-input:focus{border-color:var(--accent); color:var(--text);}
+
+  .empty{text-align:center; padding:40px 16px; color:var(--text-muted);}
+  .empty svg{width:32px; height:32px; margin-bottom:10px; opacity:.5;}
+  .empty p{margin:0; font-size:13px;}
+
+  .btn{
+    width:100%; padding:12px; border-radius:var(--radius); border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-weight:500; cursor:pointer; margin-top:4px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn svg{width:16px; height:16px;}
+  .btn.primary{background:var(--accent); color:var(--accent-text); border-color:var(--accent);}
+  .btn.danger{color:var(--danger); border-color:var(--danger);}
+  .btn:active{transform:scale(.98);}
+
+  .filter-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;}
+  .filter-chip{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-secondary);
+    border-radius:20px; padding:6px 12px; font-size:12px; cursor:pointer;
+  }
+  .filter-chip.on{background:rgba(227,162,59,.16); border-color:var(--accent); color:var(--accent);}
+  .filter-chip.apparatus{font-weight:500;}
+
+  .lib-item{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px;}
+  .lib-item-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .lib-item-head .name{font-weight:500;}
+  .lib-tags{display:flex; gap:5px; flex-wrap:wrap; margin-top:6px;}
+  .tag{font-size:10px; background:var(--surface-2); color:var(--text-muted); padding:3px 8px; border-radius:20px;}
+  .tag.apparatus{color:var(--accent); background:rgba(227,162,59,.12);}
+
+  .form-block{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px;}
+  .form-block h3{margin:0 0 10px; font-size:14px; font-weight:500;}
+  .form-block .field{margin-bottom:10px;}
+  .form-block input[type=text]{width:100%; padding:8px 10px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; outline:none;}
+  .check-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .check-chip{background:var(--surface-2); border:1px solid var(--border); color:var(--text-secondary); border-radius:20px; padding:5px 11px; font-size:12px; cursor:pointer;}
+  .check-chip.on{background:rgba(227,162,59,.16); border-color:var(--accent); color:var(--accent);}
+
+  .saved-item{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .saved-item .info{flex:1; min-width:0;}
+  .saved-item .sname{font-weight:500; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .saved-item .smeta{font-size:12px; color:var(--text-muted); margin:0;}
+  .saved-actions{display:flex; gap:4px; flex-shrink:0;}
+
+  .fab{
+    position:fixed; right:18px; bottom:calc(88px + env(safe-area-inset-bottom));
+    width:52px; height:52px; border-radius:50%; z-index:25;
+    background:var(--accent); color:var(--accent-text); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,.4);
+    transition:background .2s ease, transform .1s ease;
+  }
+  .fab svg{width:23px; height:23px;}
+  .fab:active{transform:scale(.92);}
+  .fab.fab-done{background:#6FA34C; color:#152A0B;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-box{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:14px;
+    padding:20px; max-width:340px; width:100%;
+  }
+  .modal-msg{ margin:0 0 14px; font-size:13.5px; color:var(--text-secondary); line-height:1.5; }
+  .modal-input{
+    width:100%; padding:9px 11px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; outline:none; margin-bottom:14px; color:var(--text); font-size:14px;
+  }
+  .modal-input:focus{ border-color:var(--accent); }
+  .modal-actions{ display:flex; gap:8px; }
+  .modal-actions .btn{ margin-top:0; }
+
+  .spring-row{ border:0.5px solid var(--border); border-radius:12px; margin-bottom:8px; overflow:hidden; }
+  .spring-row summary{ display:flex; align-items:center; gap:12px; padding:10px 14px; cursor:pointer; list-style:none; }
+  .spring-row summary::-webkit-details-marker{ display:none; }
+  .spring-dot{ width:24px; height:24px; border-radius:50%; flex-shrink:0; }
+  .spring-row-label{ font-size:14px; font-weight:500; flex:1; }
+  .spring-row-hex{ font-size:12px; color:var(--text-muted); font-family:monospace; }
+  .spring-row-chevron{ width:16px; height:16px; color:var(--text-muted); transition:transform .15s ease; flex-shrink:0; }
+  .spring-row[open] .spring-row-chevron{ transform:rotate(90deg); }
+  .spring-row-body{ padding:0 14px 14px; }
+  .spring-hex-input{ flex:1; padding:7px 9px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; outline:none; color:var(--text); }
+
+  .palette-details summary{
+    font-size:12px; color:var(--text-secondary); cursor:pointer; padding:4px 0;
+    list-style:none; display:flex; align-items:center; gap:6px; user-select:none;
+  }
+  .palette-details summary::-webkit-details-marker{ display:none; }
+  .palette-details summary::before{ content:"▸"; font-size:10px; color:var(--text-muted); transition:transform .15s ease; display:inline-block; }
+  .palette-details[open] summary::before{ transform:rotate(90deg); }
+  .swatch-grid{
+    display:grid; grid-template-columns:repeat(8, 1fr); gap:6px; padding-top:8px;
+  }
+  .swatch-sq{
+    aspect-ratio:1; width:100%; border-radius:5px; border:2px solid var(--border);
+    cursor:pointer; padding:0;
+  }
+
+  .btn-inline{width:auto; margin-top:0; padding:8px 14px;}
+  .add-block-row{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+
+  .block-group{
+    border:1.5px dashed var(--border-block, var(--accent));
+    border-radius:14px; padding:12px 10px 2px; margin-bottom:14px;
+    background:var(--block-group-tint);
+  }
+  .block-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin:0 4px 10px; gap:8px;
+  }
+  .block-head .bname{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--border-block, var(--accent));
+  }
+  .block-actions{display:flex; gap:2px; flex-shrink:0;}
+
+  .menu-wrap{position:relative; flex-shrink:0;}
+  .menu-dropdown{
+    position:absolute; top:calc(100% + 8px); right:0; min-width:190px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    padding:8px; z-index:50; box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .menu-section+.menu-section{ margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .menu-section-label{ font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin:0 0 6px; padding:0 6px; }
+  .menu-option{
+    width:100%; text-align:left; background:none; border:none; color:var(--text);
+    padding:8px; border-radius:8px; cursor:pointer; font-size:13.5px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .menu-option:hover{ background:var(--surface-3); }
+  .menu-option.on{ color:var(--accent); font-weight:500; }
+  .menu-option .chk{ width:14px; height:14px; opacity:0; flex-shrink:0; }
+  .menu-option.on .chk{ opacity:1; }
+
+  .tour-highlight{
+    position:fixed; z-index:300; border-radius:10px; pointer-events:none;
+    border:2px solid var(--accent); box-shadow:0 0 0 9999px rgba(0,0,0,.6);
+    transition:top .2s ease, left .2s ease, width .2s ease, height .2s ease;
+  }
+  .tour-callout{
+    position:fixed; z-index:301; max-width:270px; width:calc(100vw - 32px);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  .tour-callout p{ margin:0 0 12px; font-size:13.5px; color:var(--text); line-height:1.5; }
+  .tour-nav{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .tour-step-label{ font-size:11px; color:var(--text-muted); flex-shrink:0; }
+  .tour-btns{ display:flex; gap:6px; }
+  .tour-btn{
+    background:var(--surface-3); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:6px 12px; font-size:13px; cursor:pointer;
+  }
+  .tour-btn.primary{ background:var(--accent); color:var(--accent-text); border-color:var(--accent); }
+  .tour-btn:disabled{ opacity:.35; cursor:default; }
+  .tour-close{
+    position:fixed; z-index:301; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .tour-blocker{ position:fixed; inset:0; z-index:299; background:transparent; }
+
+  .splash-screen{
+    position:fixed; inset:0; z-index:200; background:var(--bg);
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+    padding:24px; transition:opacity .45s ease, transform .45s ease;
+  }
+  .splash-screen.hide{ opacity:0; transform:scale(1.04); pointer-events:none; }
+  .splash-logo{
+    width:96px; height:96px; border-radius:22px; flex-shrink:0;
+    border:1.5px dashed var(--border); color:var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .splash-logo svg{ width:46px; height:46px; }
+  .splash-lang-box{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:16px;
+    padding:22px; max-width:320px; width:100%; text-align:center;
+    animation:splash-box-in .5s ease .1s both;
+  }
+  .splash-lang-box p{ margin:0 0 16px; font-size:13.5px; color:var(--text-secondary); line-height:1.6; }
+  .splash-lang-row{ display:flex; gap:10px; }
+  .splash-lang-row .btn{ margin-top:0; }
+  @keyframes splash-box-in{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="splash-screen" id="splashScreen" style="display:none;">
+  <div class="splash-logo" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+  </div>
+  <div class="splash-lang-box">
+    <p>Elige tu idioma<br>Choose your language</p>
+    <div class="splash-lang-row">
+      <button type="button" class="btn primary" id="splashEs">Español</button>
+      <button type="button" class="btn primary" id="splashEn">English</button>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="wrap row">
+    <div class="logo-holder" aria-label="Espacio para logo" data-i18n-aria="logoSpace">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+    </div>
+    <div id="headerInfo" style="flex:1; min-width:0;">
+      <p class="brand" data-i18n="brand">Planificador pilates</p>
+      <input id="planName" class="plan-name" value="Clase sin nombre">
+      <input id="planDate" type="date" class="plan-date">
+    </div>
+    <div class="total-box" id="headerTotal">
+      <p class="label" data-i18n="totalLabel">Tiempo total</p>
+      <p class="val num" id="totalTime">0 min</p>
+    </div>
+    <button class="icon-btn" id="helpTourBtn" aria-label="Ayuda" data-i18n-aria="helpAria" style="color:var(--text); padding:6px; flex-shrink:0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:21px; height:21px;"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.2a2.5 2.5 0 014.9.8c0 1.6-2.4 2-2.4 3.6"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <div class="menu-wrap">
+      <button class="icon-btn" id="menuBtn" aria-label="Menú" data-i18n-aria="menuAria" aria-haspopup="true" style="color:var(--text); padding:6px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" style="width:21px; height:21px;"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="menu-dropdown" id="menuDropdown" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="view active" id="view-clase">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchBox" placeholder="Buscar ejercicio para agregar…" data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+      <div class="results" id="results"></div>
+    </div>
+
+    <div class="add-block-row">
+      <button class="btn btn-inline" id="addBlockBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span data-i18n="addBlock">Agregar bloque</span>
+      </button>
+    </div>
+
+    <div id="planList"></div>
+    <div class="empty" id="emptyPlan" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg>
+      <p data-i18n="emptyPlan">Aún no hay ejercicios. Busca uno arriba para empezar la clase.</p>
+    </div>
+
+    <button class="btn primary" id="saveBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      <span data-i18n="saveClass">Guardar esta clase</span>
+    </button>
+    <button class="btn" id="newBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      <span data-i18n="newClass">Empezar clase nueva</span>
+    </button>
+  </div>
+
+  <div class="view" id="view-biblioteca">
+    <div class="search-wrap" style="position:static;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="libSearch" placeholder="Buscar en la biblioteca…" data-i18n-placeholder="libSearchPlaceholder" autocomplete="off">
+    </div>
+    <div class="filter-row" id="apparatusRow"></div>
+    <div class="filter-row" id="filterRow"></div>
+
+    <div class="form-block" id="formBlock" style="display:none;">
+      <h3 data-i18n="addExerciseHeading">Agregar ejercicio nuevo</h3>
+      <div class="field"><input type="text" id="newExName" placeholder="Nombre del ejercicio" data-i18n-placeholder="exerciseNamePlaceholder"></div>
+      <div class="field-grid">
+        <div class="field">
+          <label data-i18n="apparatusLabel">Aparato</label>
+          <select id="newExApparatus"><option value="mat">Mat</option><option value="reformer">Reformer</option></select>
+        </div>
+        <div class="field">
+          <label data-i18n="strapsDefaultLabel">Straps por defecto</label>
+          <select id="newExStraps"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="boxDefaultLabel">Box por defecto</label>
+        <select id="newExBox"></select>
+      </div>
+      <div class="field"><input type="text" id="newExGroups" placeholder="Grupos musculares (separados por coma)" data-i18n-placeholder="groupsPlaceholder"></div>
+      <div class="field">
+        <label data-i18n="propsSuggestedLabel">Props sugeridos</label>
+        <div class="check-row" id="newExPropsRow"></div>
+      </div>
+      <button class="btn primary" id="addLibBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span data-i18n="addToLibrary">Agregar a la biblioteca</span>
+      </button>
+    </div>
+
+    <div id="libList"></div>
+  </div>
+
+  <div class="view" id="view-resortes">
+    <p class="section-label" data-i18n="customizeSpringColors">Personaliza el color de cada nivel de resistencia</p>
+    <div id="springColorList"></div>
+    <button class="btn" id="resetSpringColorsBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3.5-7.1M21 4v6h-6"/></svg>
+      <span data-i18n="resetSpringColors">Restaurar colores por defecto</span>
+    </button>
+  </div>
+
+  <div class="view" id="view-guardadas">
+    <div class="search-wrap" style="position:static;">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="savedSearch" placeholder="Buscar clase guardada por nombre…" data-i18n-placeholder="savedSearchPlaceholder" autocomplete="off">
+    </div>
+    <div class="filter-row" id="savedFilterRow"></div>
+    <div id="savedList"></div>
+    <div class="empty" id="emptySaved" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <p data-i18n="emptySaved">Las clases que guardes aparecerán aquí.</p>
+    </div>
+  </div>
+
+  <div class="view" id="view-detalle">
+    <button class="btn" id="backFromDetalle" style="margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span data-i18n="backToSaved">Volver a guardadas</span>
+    </button>
+    <p class="brand" id="detalleName" style="font-size:16px; color:var(--text);"></p>
+    <div id="detalleList" style="margin-top:10px;"></div>
+  </div>
+
+</div>
+
+<button class="fab" id="fabSave" aria-label="Guardar esta clase" data-i18n-aria="saveClassFab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+</button>
+<button class="fab" id="fabEditDetalle" style="display:none;" aria-label="Editar esta clase" data-i18n-aria="editClassFab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+</button>
+
+<div class="tabbar">
+  <button class="tab active" data-view="clase">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg>
+    <span data-i18n="tabClase">Clase</span>
+  </button>
+  <button class="tab" data-view="biblioteca">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span data-i18n="tabBiblioteca">Biblioteca</span>
+  </button>
+  <button class="tab" data-view="resortes">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="13" x2="20" y2="13"/><circle cx="16" cy="13" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="19" x2="20" y2="19"/><circle cx="7" cy="19" r="2" fill="currentColor" stroke="none"/></svg>
+    <span data-i18n="tabResortes">Resortes</span>
+  </button>
+  <button class="tab" data-view="guardadas">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    <span data-i18n="tabGuardadas">Guardadas</span>
+  </button>
+</div>
+
+<script>
+/* ---------- i18n ---------- */
+const I18N = {
+  es: {
+    appTitle: "Planificador pilates",
+    brand: "Planificador pilates",
+    defaultPlanName: "Clase sin nombre",
+    totalLabel: "Tiempo total",
+    minUnit: "min",
+    searchPlaceholder: "Buscar ejercicio para agregar…",
+    emptyPlan: "Aún no hay ejercicios. Busca uno arriba para empezar la clase.",
+    saveClass: "Guardar esta clase",
+    changesSaved: "Cambios guardados",
+    classSaved: "Clase guardada",
+    newClass: "Empezar clase nueva",
+    addBlock: "Agregar bloque",
+    tabClase: "Clase",
+    tabBiblioteca: "Biblioteca",
+    tabResortes: "Resortes",
+    tabGuardadas: "Guardadas",
+    libSearchPlaceholder: "Buscar en la biblioteca…",
+    filterMat: "Mat",
+    filterReformer: "Reformer",
+    filterCustom: "Tus ejercicios",
+    addExerciseHeading: "Agregar ejercicio nuevo",
+    exerciseNamePlaceholder: "Nombre del ejercicio",
+    unnamedExercise: "Ejercicio",
+    apparatusLabel: "Aparato",
+    strapsDefaultLabel: "Straps por defecto",
+    boxDefaultLabel: "Box por defecto",
+    groupsPlaceholder: "Grupos musculares (separados por coma)",
+    propsSuggestedLabel: "Props sugeridos",
+    addToLibrary: "Agregar a la biblioteca",
+    addToClassAria: "Agregar a la clase",
+    noCustomYet: "Aún no has agregado ninguno — usa el formulario de arriba.",
+    noFilterResults: "No hay ejercicios con ese filtro.",
+    customizeSpringColors: "Personaliza el color de cada nivel de resistencia",
+    viewPalette: "Ver paleta de colores",
+    resetSpringColors: "Restaurar colores por defecto",
+    confirmResetColors: "¿Restaurar los colores de resistencia originales?",
+    savedSearchPlaceholder: "Buscar clase guardada por nombre…",
+    favoritesChip: "★ Favoritas",
+    newListChip: "Nueva lista",
+    chooseListIntro: "Elige una lista para esta clase, o crea una nueva.",
+    noList: "Sin lista",
+    newListPrompt: "Nombre de la lista:",
+    renameListPrompt: "Nuevo nombre de la lista:",
+    confirmRemoveList: "¿Eliminar esta lista? Las clases se conservan, solo se quitan de la lista.",
+    renameListAria: "Renombrar lista",
+    removeListAria: "Eliminar lista",
+    assignListAria: "Agregar a lista",
+    emptySaved: "Las clases que guardes aparecerán aquí.",
+    backToSaved: "Volver a guardadas",
+    noExercisesInClass: "Esta clase no tiene ejercicios.",
+    noExercisesInSaved: "Esta clase no tiene ejercicios.",
+    blockLabel: "Bloque",
+    noBlock: "Sin bloque",
+    strapsLabel: "Straps",
+    boxLabel: "Box",
+    jumpboardYes: "Jumpboard sí",
+    jumpboardNo: "Jumpboard no",
+    repsLabel: "Reps",
+    timeSecLabel: "Tiempo (seg)",
+    propsLabel: "Props",
+    addPropOption: "+ Agregar prop",
+    springsLabel: "Resortes",
+    notesPlaceholder: "Nota / cueing",
+    moveUp: "Mover arriba",
+    moveDown: "Mover abajo",
+    remove: "Eliminar",
+    renameBlockAria: "Renombrar bloque",
+    removeBlockAria: "Quitar bloque",
+    moveBlockUp: "Mover bloque arriba",
+    moveBlockDown: "Mover bloque abajo",
+    lessOf: "menos",
+    moreOf: "mas",
+    repsUnit: "reps",
+    segUnit: "seg",
+    yes: "sí",
+    no: "no",
+    noResults: "Sin resultados. Agrégalo en Biblioteca.",
+    yourExercises: "Tus ejercicios",
+    classicLibrary: "Biblioteca clásica",
+    cancel: "Cancelar",
+    accept: "Aceptar",
+    save: "Guardar",
+    confirmSaveChanges: name=>`¿Guardar los cambios en "${name}"?`,
+    duplicateNamePrompt: name=>`Ya existe una clase guardada llamada "${name}". Escribe un nombre distinto para guardar esta como una clase nueva:`,
+    confirmNewClass: "¿Empezar una clase nueva? Si no la guardaste, se perderán los cambios actuales.",
+    confirmDeleteSaved: "¿Eliminar esta clase guardada?",
+    blockNamePrompt: "Nombre del bloque:",
+    blockDefaultName: n=>`Bloque ${n}`,
+    blockRenamePrompt: "Nuevo nombre del bloque:",
+    confirmRemoveBlock: "¿Quitar este bloque? Los ejercicios se conservan, solo se deshace la agrupación.",
+    editClassAria: "Editar clase",
+    viewClassAria: "Ver clase",
+    deleteSavedAria: "Eliminar guardada",
+    markFavoriteAria: "Marcar como favorita",
+    unmarkFavoriteAria: "Quitar de favoritas",
+    editClassFab: "Editar esta clase",
+    saveClassFab: "Guardar esta clase",
+    logoSpace: "Espacio para logo",
+    menuAria: "Menú",
+    languageLabel: "Idioma",
+    interfaceLabel: "Interfaz",
+    dayMode: "Día",
+    nightMode: "Noche",
+    mainColorLabel: "Color principal",
+    changeColor: "Cambiar color",
+    chooseAccentIntro: "Elige el color principal de la app.",
+    resetAccentColor: "Restaurar color por defecto",
+    confirmResetAccent: "¿Restaurar el color principal original?",
+    proLabel: "Versión Pro",
+    proActive: "Pro activado ✓",
+    upgradeToPro: "Hazte Pro",
+    proTitle: "Función Pro",
+    notNow: "Ahora no",
+    unlockPro: "Hazte Pro",
+    simulatedPurchaseConfirm: "[Modo de prueba] Aquí se abriría el pago único de la tienda. ¿Simular una compra exitosa?",
+    devResetProConfirm: "[Modo de prueba] ¿Desactivar Pro para seguir probando la versión gratuita?",
+    proGenericReason: "Desbloquea ejercicios propios ilimitados y clases guardadas ilimitadas con un solo pago, para siempre.",
+    proReasonCustomExercise: "Agregar tus propios ejercicios es una función Pro. Desbloquéala con un solo pago, para siempre.",
+    proReasonSavedLimit: "En la versión gratuita puedes guardar hasta 3 clases. Hazte Pro para guardar clases ilimitadas con un solo pago.",
+    dateLocale: "es-MX",
+    metaLine: (date, count, min)=>`${date} · ${count} ejercicios · ${min} min`,
+    helpAria: "Ayuda",
+    tourStepOf: (n,total)=>`${n} de ${total}`,
+    tourNext: "Siguiente",
+    tourPrev: "Anterior",
+    tourDone: "Entendido",
+    tourCloseAria: "Cerrar ayuda",
+    tour_clase_search: "Busca ejercicios de tu biblioteca para agregarlos a esta clase.",
+    tour_clase_addblock: "Crea un bloque para agrupar varios ejercicios bajo un mismo nombre (por ejemplo, \"Calentamiento\").",
+    tour_clase_cardmove: "Reordena el ejercicio dentro de la clase, o elimínalo con la X.",
+    tour_clase_blockselect: "Asigna este ejercicio a uno de tus bloques, o déjalo \"Sin bloque\".",
+    tour_clase_straps: "Define cómo se usa el Reformer para este ejercicio: straps (manos/pies), tipo de box, y si usa el jumpboard.",
+    tour_clase_reps: "Repeticiones y tiempo en segundos — el tiempo es lo que suma el \"Tiempo total\" del encabezado.",
+    tour_clase_props: "Agrega los accesorios que necesite este ejercicio, como aro o banda.",
+    tour_clase_springs: "Ajusta cuántos resortes de cada nivel de resistencia usa el ejercicio.",
+    tour_clase_notes: "Escribe indicaciones o cues para recordar mientras enseñas.",
+    tour_clase_save: "Guarda esta clase para encontrarla luego en \"Guardadas\", o empieza una nueva desde cero.",
+    tour_bib_search: "Busca un ejercicio específico por nombre.",
+    tour_bib_apparatus: "Filtra la biblioteca por Mat, Reformer, o tus propios ejercicios.",
+    tour_bib_groups: "Filtra por grupo muscular trabajado.",
+    tour_bib_add: "Agrega este ejercicio directamente a la clase que estás armando.",
+    tour_bib_customname: "Aquí puedes crear tus propios ejercicios. Empieza escribiendo el nombre.",
+    tour_bib_customapparatus: "Elige el aparato y sus valores por defecto de straps y box.",
+    tour_bib_customgroups: "Escribe los grupos musculares que trabaja, separados por coma — se usan para filtrar.",
+    tour_bib_customprops: "Marca los accesorios que sugieres usar con este ejercicio.",
+    tour_bib_customadd: "Guarda el ejercicio en tu biblioteca personal, listo para usar en cualquier clase.",
+    tour_res_strip: "Vista rápida de los 4 colores de resistencia que usas en tus clases.",
+    tour_res_row: "Toca cualquier nivel para expandirlo y personalizar su color.",
+    tour_res_hex: "Escribe un código de color exacto (por ejemplo #E3A23B)…",
+    tour_res_palette: "…o abre la paleta y elige uno con un toque.",
+    tour_res_reset: "Si algo sale mal, aquí restauras los colores originales.",
+    tour_gua_search: "Busca una clase guardada por su nombre.",
+    tour_gua_fav: "Muestra solo tus clases marcadas como favoritas.",
+    tour_gua_lists: "Crea listas para organizar tus clases guardadas (por ejemplo, por alumno o nivel).",
+    tour_gua_move: "Reordena el orden en que aparecen tus clases guardadas.",
+    tour_gua_list: "Asigna esta clase a una de tus listas.",
+    tour_gua_star: "Marca esta clase como favorita.",
+    tour_gua_actions: "Ve el detalle, edita, o elimina esta clase guardada."
+  },
+  en: {
+    appTitle: "Pilates Planner",
+    brand: "Pilates Planner",
+    defaultPlanName: "Untitled class",
+    totalLabel: "Total time",
+    minUnit: "min",
+    searchPlaceholder: "Search for an exercise to add…",
+    emptyPlan: "No exercises yet. Search above to start the class.",
+    saveClass: "Save this class",
+    changesSaved: "Changes saved",
+    classSaved: "Class saved",
+    newClass: "Start new class",
+    addBlock: "Add block",
+    tabClase: "Class",
+    tabBiblioteca: "Library",
+    tabResortes: "Springs",
+    tabGuardadas: "Saved",
+    libSearchPlaceholder: "Search the library…",
+    filterMat: "Mat",
+    filterReformer: "Reformer",
+    filterCustom: "Your exercises",
+    addExerciseHeading: "Add new exercise",
+    exerciseNamePlaceholder: "Exercise name",
+    unnamedExercise: "Exercise",
+    apparatusLabel: "Apparatus",
+    strapsDefaultLabel: "Default straps",
+    boxDefaultLabel: "Default box",
+    groupsPlaceholder: "Muscle groups (comma separated)",
+    propsSuggestedLabel: "Suggested props",
+    addToLibrary: "Add to library",
+    addToClassAria: "Add to class",
+    noCustomYet: "You haven't added any yet — use the form above.",
+    noFilterResults: "No exercises match that filter.",
+    customizeSpringColors: "Customize the color of each resistance level",
+    viewPalette: "View color palette",
+    resetSpringColors: "Restore default colors",
+    confirmResetColors: "Restore the original resistance colors?",
+    savedSearchPlaceholder: "Search saved classes by name…",
+    favoritesChip: "★ Favorites",
+    newListChip: "New list",
+    chooseListIntro: "Choose a list for this class, or create a new one.",
+    noList: "No list",
+    newListPrompt: "List name:",
+    renameListPrompt: "New list name:",
+    confirmRemoveList: "Delete this list? The classes are kept, only removed from the list.",
+    renameListAria: "Rename list",
+    removeListAria: "Remove list",
+    assignListAria: "Add to list",
+    emptySaved: "Classes you save will appear here.",
+    backToSaved: "Back to saved",
+    noExercisesInClass: "This class has no exercises.",
+    noExercisesInSaved: "This class has no exercises.",
+    blockLabel: "Block",
+    noBlock: "No block",
+    strapsLabel: "Straps",
+    boxLabel: "Box",
+    jumpboardYes: "Jumpboard yes",
+    jumpboardNo: "Jumpboard no",
+    repsLabel: "Reps",
+    timeSecLabel: "Time (sec)",
+    propsLabel: "Props",
+    addPropOption: "+ Add prop",
+    springsLabel: "Springs",
+    notesPlaceholder: "Note / cueing",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    remove: "Remove",
+    renameBlockAria: "Rename block",
+    removeBlockAria: "Remove block",
+    moveBlockUp: "Move block up",
+    moveBlockDown: "Move block down",
+    lessOf: "less",
+    moreOf: "more",
+    repsUnit: "reps",
+    segUnit: "sec",
+    yes: "yes",
+    no: "no",
+    noResults: "No results. Add it in Library.",
+    yourExercises: "Your exercises",
+    classicLibrary: "Classic library",
+    cancel: "Cancel",
+    accept: "Accept",
+    save: "Save",
+    confirmSaveChanges: name=>`Save changes to "${name}"?`,
+    duplicateNamePrompt: name=>`A saved class named "${name}" already exists. Type a different name to save this as a new class:`,
+    confirmNewClass: "Start a new class? Unsaved changes will be lost.",
+    confirmDeleteSaved: "Delete this saved class?",
+    blockNamePrompt: "Block name:",
+    blockDefaultName: n=>`Block ${n}`,
+    blockRenamePrompt: "New block name:",
+    confirmRemoveBlock: "Remove this block? The exercises are kept, only the grouping is undone.",
+    editClassAria: "Edit class",
+    viewClassAria: "View class",
+    deleteSavedAria: "Delete saved class",
+    markFavoriteAria: "Mark as favorite",
+    unmarkFavoriteAria: "Unmark as favorite",
+    editClassFab: "Edit this class",
+    saveClassFab: "Save this class",
+    logoSpace: "Space for logo",
+    menuAria: "Menu",
+    languageLabel: "Language",
+    interfaceLabel: "Interface",
+    dayMode: "Day",
+    nightMode: "Night",
+    mainColorLabel: "Main color",
+    changeColor: "Change color",
+    chooseAccentIntro: "Choose the app's main color.",
+    resetAccentColor: "Restore default color",
+    confirmResetAccent: "Restore the original main color?",
+    proLabel: "Pro version",
+    proActive: "Pro active ✓",
+    upgradeToPro: "Go Pro",
+    proTitle: "Pro feature",
+    notNow: "Not now",
+    unlockPro: "Go Pro",
+    simulatedPurchaseConfirm: "[Test mode] This is where the store's one-time payment would open. Simulate a successful purchase?",
+    devResetProConfirm: "[Test mode] Turn Pro off to keep testing the free version?",
+    proGenericReason: "Unlock unlimited custom exercises and unlimited saved classes with a single one-time payment.",
+    proReasonCustomExercise: "Adding your own exercises is a Pro feature. Unlock it with a single one-time payment.",
+    proReasonSavedLimit: "The free version lets you save up to 3 classes. Go Pro to save unlimited classes with a single payment.",
+    dateLocale: "en-US",
+    metaLine: (date, count, min)=>`${date} · ${count} exercises · ${min} min`,
+    helpAria: "Help",
+    tourStepOf: (n,total)=>`${n} of ${total}`,
+    tourNext: "Next",
+    tourPrev: "Back",
+    tourDone: "Got it",
+    tourCloseAria: "Close help",
+    tour_clase_search: "Search your library for exercises to add to this class.",
+    tour_clase_addblock: "Create a block to group several exercises under one name (e.g. \"Warm-up\").",
+    tour_clase_cardmove: "Reorder this exercise within the class, or remove it with the X.",
+    tour_clase_blockselect: "Assign this exercise to one of your blocks, or leave it \"No block\".",
+    tour_clase_straps: "Set how the Reformer is used for this exercise: straps (hands/feet), box type, and whether it uses the jumpboard.",
+    tour_clase_reps: "Reps and time in seconds — the time is what adds up to the \"Total time\" in the header.",
+    tour_clase_props: "Add any props this exercise needs, like a ring or a band.",
+    tour_clase_springs: "Adjust how many springs of each resistance level the exercise uses.",
+    tour_clase_notes: "Write reminders or cues to use while teaching.",
+    tour_clase_save: "Save this class to find it later in \"Saved\", or start a new one from scratch.",
+    tour_bib_search: "Search for a specific exercise by name.",
+    tour_bib_apparatus: "Filter the library by Mat, Reformer, or your own exercises.",
+    tour_bib_groups: "Filter by muscle group worked.",
+    tour_bib_add: "Add this exercise straight into the class you're building.",
+    tour_bib_customname: "Create your own exercises here. Start by typing the name.",
+    tour_bib_customapparatus: "Choose the apparatus and its default straps and box.",
+    tour_bib_customgroups: "Type the muscle groups it works, comma separated — used for filtering.",
+    tour_bib_customprops: "Check the props you suggest using with this exercise.",
+    tour_bib_customadd: "Save the exercise to your personal library, ready to use in any class.",
+    tour_res_strip: "A quick view of the 4 resistance colors you use in your classes.",
+    tour_res_row: "Tap any level to expand it and customize its color.",
+    tour_res_hex: "Type an exact color code (e.g. #E3A23B)…",
+    tour_res_palette: "…or open the palette and pick one with a tap.",
+    tour_res_reset: "If something goes wrong, restore the original colors here.",
+    tour_gua_search: "Search a saved class by its name.",
+    tour_gua_fav: "Show only the classes you've marked as favorites.",
+    tour_gua_lists: "Create lists to organize your saved classes (e.g. by student or level).",
+    tour_gua_move: "Reorder the order your saved classes appear in.",
+    tour_gua_list: "Assign this class to one of your lists.",
+    tour_gua_star: "Mark this class as a favorite.",
+    tour_gua_actions: "View the details, edit, or delete this saved class."
+  }
+};
+
+const GROUP_LABELS_EN = {
+  "core":"Core", "respiracion":"Breathing", "movilidad-espinal":"Spinal Mobility", "isquiotibiales":"Hamstrings",
+  "cadera":"Hips", "estabilidad-pelvica":"Pelvic Stability", "equilibrio":"Balance", "coordinacion":"Coordination",
+  "oblicuos":"Obliques", "espalda":"Back", "extension":"Extension", "hombros":"Shoulders", "gluteos":"Glutes",
+  "estabilidad-lateral":"Lateral Stability", "movilidad-lateral":"Lateral Mobility", "piernas":"Legs", "pies":"Feet",
+  "long box":"Long Box", "long stretch":"Long Stretch", "brazos":"Arms", "stomach massage":"Stomach Massage",
+  "pantorrilla":"Calves", "short box":"Short Box", "postura":"Posture", "cuadriceps":"Quads",
+  "triceps":"Triceps", "aductores":"Adductors", "avanzado":"Advanced", "general":"General"
+};
+const STRAPS_LABELS = { es:{"N/A":"N/A","Manos":"Manos","Pies":"Pies"}, en:{"N/A":"N/A","Manos":"Hands","Pies":"Feet"} };
+const BOX_LABELS = { es:{"N/A":"N/A","Long box":"Long box","Short box":"Short box","Front box":"Front box","Sideways":"Lateral"}, en:{"N/A":"N/A","Long box":"Long box","Short box":"Short box","Front box":"Front box","Sideways":"Sideways"} };
+const PROP_LABELS = {
+  es: {aro:"Aro", swissball:"Swiss ball", miniball:"Miniball", baston:"Bastón", bosu:"Bosu", ligas:"Ligas", bandas:"Bandas de resistencia", bloque:"Bloque de yoga", mancuernas:"Mancuernas"},
+  en: {aro:"Ring", swissball:"Swiss ball", miniball:"Mini ball", baston:"Pole", bosu:"Bosu", ligas:"Loop bands", bandas:"Resistance bands", bloque:"Yoga block", mancuernas:"Dumbbells"}
+};
+const SPRING_LABELS = { es:{ligero:"Ligero",medio:"Medio",pesado:"Pesado",muypesado:"Muy pesado"}, en:{ligero:"Light",medio:"Medium",pesado:"Heavy",muypesado:"Very Heavy"} };
+const APPARATUS_LABELS = { es:{mat:"Mat",reformer:"Reformer"}, en:{mat:"Mat",reformer:"Reformer"} };
+
+let currentLang = "es";
+function t(key, ...args){
+  const dict = I18N[currentLang] || I18N.es;
+  const val = dict[key];
+  if(typeof val === "function") return val(...args);
+  if(val !== undefined) return val;
+  const fallback = I18N.es[key];
+  return typeof fallback === "function" ? fallback(...args) : (fallback !== undefined ? fallback : key);
+}
+function groupLabel(g){
+  if(currentLang !== "en") return g;
+  return GROUP_LABELS_EN[String(g).toLowerCase()] || g;
+}
+function strapsLabel(v){ return (STRAPS_LABELS[currentLang] && STRAPS_LABELS[currentLang][v]) || v; }
+function boxLabel(v){ return (BOX_LABELS[currentLang] && BOX_LABELS[currentLang][v]) || v; }
+function springLabel(k){ return (SPRING_LABELS[currentLang] && SPRING_LABELS[currentLang][k]) || k; }
+function apparatusLabel(a){ return (APPARATUS_LABELS[currentLang] && APPARATUS_LABELS[currentLang][a]) || a; }
+
+/* ---------- constantes ---------- */
+const STRAPS_OPTS = ["N/A","Manos","Pies"];
+const BOX_OPTS = ["N/A","Long box","Short box","Front box","Sideways"];
+const SPRINGS = [
+  {k:"ligero", label:"Ligero"},
+  {k:"medio", label:"Medio"},
+  {k:"pesado", label:"Pesado"},
+  {k:"muypesado", label:"Muy pesado"}
+];
+
+const PROPS_DB = [
+  {id:"aro", n:"Aro"},
+  {id:"swissball", n:"Swiss ball"},
+  {id:"miniball", n:"Miniball"},
+  {id:"baston", n:"Bastón"},
+  {id:"bosu", n:"Bosu"},
+  {id:"ligas", n:"Ligas"},
+  {id:"bandas", n:"Bandas de resistencia"},
+  {id:"bloque", n:"Bloque de yoga"},
+  {id:"mancuernas", n:"Mancuernas"}
+];
+
+/* Mat clásico: los 34 ejercicios originales de Joseph Pilates, orden de "Return to Life".
+   La secuencia clásica no usa props ni box; straps no aplica en mat. */
+const MAT_DB = [
+  ["The Hundred","core, respiracion"],
+  ["Roll Up","core, movilidad-espinal"],
+  ["Roll Over","core, movilidad-espinal, isquiotibiales"],
+  ["Single Leg Circles","cadera, estabilidad-pelvica"],
+  ["Rolling Like a Ball","core, equilibrio, movilidad-espinal"],
+  ["Single Leg Stretch","core"],
+  ["Double Leg Stretch","core, coordinacion"],
+  ["Spine Stretch Forward","movilidad-espinal, isquiotibiales"],
+  ["Open Leg Rocker","core, equilibrio"],
+  ["Corkscrew","core, oblicuos"],
+  ["Saw","oblicuos, movilidad-espinal"],
+  ["Swan","espalda, extension"],
+  ["Single Leg Kicks","espalda, isquiotibiales"],
+  ["Double Leg Kicks","espalda, hombros"],
+  ["Neck Pull","core, movilidad-espinal"],
+  ["High Scissors","core, cadera"],
+  ["High Bicycle","core, cadera"],
+  ["Shoulder Bridge","gluteos, core"],
+  ["Spine Twist","oblicuos, movilidad-espinal"],
+  ["Jackknife","core, equilibrio"],
+  ["Side Kicks","cadera, gluteos, estabilidad-lateral"],
+  ["Teaser","core, equilibrio"],
+  ["Hip Twist","core, cadera"],
+  ["Swimming","espalda, gluteos, extension"],
+  ["Leg Pull","core, hombros"],
+  ["Leg Pull Up","core, gluteos, hombros"],
+  ["Kneeling Side Kicks","gluteos, estabilidad-lateral"],
+  ["Side Bend","oblicuos, hombros"],
+  ["Boomerang","core, equilibrio, movilidad-espinal"],
+  ["Seal","core, movilidad-espinal"],
+  ["Crab","core, movilidad-espinal"],
+  ["Rocking","espalda, extension, equilibrio"],
+  ["Control Balance","core, isquiotibiales, equilibrio"],
+  ["Push Ups","hombros, core"]
+].map((row,i)=>({
+  id:"mat-"+(i+1), n:row[0], order:i+1, apparatus:"mat", origin:"clasico",
+  groups: row[1].split(",").map(s=>s.trim()),
+  straps:"N/A", box:"N/A", props:[]
+}));
+
+/* Reformer clásico: orden completo tradicional (linaje Romana), aplanando las series
+   por bloques (long box, short box, etc). Straps/box son valores por defecto,
+   editables — el orden y uso exacto varía un poco entre escuelas. */
+const REFORMER_DB = [
+  ["Footwork","piernas, pies","N/A","N/A"],
+  ["Frog","aductores, piernas, cadera","N/A","N/A"],
+  ["Circles","cadera, piernas, aductores","N/A","N/A"],
+  ["Hundred","core, respiracion","N/A","N/A"],
+  ["Overhead","core, hombros","N/A","N/A"],
+  ["Coordination","core, coordinacion","Manos","N/A"],
+  ["Rowing — Front","espalda, hombros","Manos","N/A"],
+  ["Rowing — Back","espalda, hombros","Manos","N/A"],
+  ["Swan (long box)","espalda, extension, long box","N/A","Long box"],
+  ["Pull Straps / T (long box)","espalda, hombros, long box","Manos","Long box"],
+  ["Backstroke (long box)","core, piernas, long box","Manos","Long box"],
+  ["Teaser (long box)","core, equilibrio, long box","Pies","Long box"],
+  ["Breaststroke (long box)","espalda, extension, long box","N/A","Long box"],
+  ["Hamstring Stretch (long box)","isquiotibiales, long box","N/A","Long box"],
+  ["Horseback (long box)","core, equilibrio, long box","N/A","Long box"],
+  ["Long Stretch","core, hombros, long stretch","N/A","N/A"],
+  ["Down Stretch","core, hombros, long stretch","N/A","N/A"],
+  ["Up Stretch","core, piernas, long stretch","N/A","N/A"],
+  ["Elephant","isquiotibiales, pantorrilla, long stretch","N/A","N/A"],
+  ["One Leg Elephant","isquiotibiales, equilibrio, long stretch","N/A","N/A"],
+  ["Long Back Stretch","core, brazos","N/A","N/A"],
+  ["Stomach Massage — Round","core, cadera, stomach massage","N/A","N/A"],
+  ["Stomach Massage — Hands Back","core, stomach massage","N/A","N/A"],
+  ["Stomach Massage — Reach","core, hombros, stomach massage","N/A","N/A"],
+  ["Stomach Massage — Twist","oblicuos, stomach massage","N/A","N/A"],
+  ["Tendon Stretch","pantorrilla, equilibrio","N/A","N/A"],
+  ["Tendon Stretch — One Leg","pantorrilla, equilibrio","N/A","N/A"],
+  ["Short Box — Round","core, short box","N/A","Short box"],
+  ["Short Box — Tall","core, postura, short box","N/A","Short box"],
+  ["Short Box — Side","oblicuos, short box","N/A","Short box"],
+  ["Short Box — Twist","oblicuos, short box","N/A","Short box"],
+  ["Short Box — Around the World","core, movilidad-espinal, short box","N/A","Short box"],
+  ["Short Box — Tree","isquiotibiales, equilibrio, short box","N/A","Short box"],
+  ["Short Spine Massage","core, movilidad-espinal","Pies","N/A"],
+  ["Semi Circle","core, cadera","Pies","N/A"],
+  ["Headstands","hombros, core, equilibrio","N/A","N/A"],
+  ["Chest Expansion","espalda, hombros","Manos","N/A"],
+  ["Thigh Stretch","cuadriceps, equilibrio","N/A","N/A"],
+  ["Backbends","espalda, extension","N/A","N/A"],
+  ["Arm Circles / Swakate","hombros","Manos","N/A"],
+  ["Snake / Twist","oblicuos, hombros","N/A","N/A"],
+  ["Headstands con straps","core, equilibrio, hombros","Pies","N/A"],
+  ["Corkscrew (reformer)","core, oblicuos","Pies","N/A"],
+  ["Tic Toc","oblicuos, core","Pies","N/A"],
+  ["Control Balance Off","core, equilibrio","Pies","N/A"],
+  ["Grasshopper (2do long box)","espalda, piernas, long box","N/A","Long box"],
+  ["Rocking (2do long box)","espalda, extension, long box","N/A","Long box"],
+  ["Swimming (2do long box)","espalda, gluteos, long box","N/A","Long box"],
+  ["Long Spine Stretch","core, movilidad-espinal","Pies","N/A"],
+  ["High Bridge","gluteos, core, equilibrio","N/A","N/A"],
+  ["Mermaid","oblicuos, movilidad-lateral","N/A","Sideways"],
+  ["Knee Stretches","gluteos, core","N/A","N/A"],
+  ["Running","pantorrilla","N/A","N/A"],
+  ["Pelvic Lift","gluteos, core","N/A","N/A"],
+  ["Control Push Ups — Front","hombros, core","N/A","N/A"],
+  ["Control Push Ups — Back","hombros, triceps","N/A","N/A"],
+  ["Star","oblicuos, hombros, equilibrio","N/A","Sideways"],
+  ["Side Splits","aductores, equilibrio","N/A","N/A"],
+  ["Front Splits","isquiotibiales, equilibrio, avanzado","N/A","N/A"],
+  ["Russian Splits","isquiotibiales, equilibrio, avanzado","N/A","N/A"],
+  ["Russian Squat","piernas, equilibrio, avanzado","N/A","N/A"]
+].map((row,i)=>({
+  id:"ref-"+(i+1), n:row[0], order:i+1, apparatus:"reformer",
+  groups: row[1].split(",").map(s=>s.trim()),
+  straps: row[2], box: row[3], props:[]
+}));
+
+/* ---------- almacenamiento ---------- */
+function showModal({message, type="confirm", defaultValue=""}){
+  return new Promise(resolve=>{
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <p class="modal-msg"></p>
+        ${type==="prompt" ? `<input type="text" class="modal-input">` : ""}
+        <div class="modal-actions">
+          <button type="button" class="btn modal-cancel">${t('cancel')}</button>
+          <button type="button" class="btn primary modal-ok">${type==="prompt" ? t('save') : t('accept')}</button>
+        </div>
+      </div>`;
+    overlay.querySelector(".modal-msg").textContent = message;
+    const input = overlay.querySelector(".modal-input");
+    if(input) input.value = defaultValue;
+    document.body.appendChild(overlay);
+    if(input){ input.focus(); input.select(); }
+
+    function cleanup(result){ overlay.remove(); resolve(result); }
+    overlay.querySelector(".modal-cancel").addEventListener("click", ()=>cleanup(type==="prompt" ? null : false));
+    overlay.querySelector(".modal-ok").addEventListener("click", ()=>cleanup(type==="prompt" ? input.value : true));
+    if(input){
+      input.addEventListener("keydown", e=>{
+        if(e.key==="Enter") cleanup(input.value);
+        if(e.key==="Escape") cleanup(null);
+      });
+    }
+    overlay.addEventListener("click", e=>{ if(e.target===overlay) cleanup(type==="prompt" ? null : false); });
+  });
+}
+function showConfirm(message){ return showModal({message, type:"confirm"}); }
+function showPrompt(message, defaultValue){ return showModal({message, type:"prompt", defaultValue}); }
+
+function showPaywallModal(message){
+  return new Promise(resolve=>{
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <p class="modal-msg" style="font-weight:600;"></p>
+        <p class="modal-msg" style="font-size:14px; color:var(--text-muted); font-weight:400;"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn modal-cancel">${t('notNow')}</button>
+          <button type="button" class="btn primary modal-ok">${t('unlockPro')}</button>
+        </div>
+      </div>`;
+    const msgEls = overlay.querySelectorAll(".modal-msg");
+    msgEls[0].textContent = t('proTitle');
+    msgEls[1].textContent = message;
+    document.body.appendChild(overlay);
+    function cleanup(result){ overlay.remove(); resolve(result); }
+    overlay.querySelector(".modal-cancel").addEventListener("click", ()=>cleanup(false));
+    overlay.querySelector(".modal-ok").addEventListener("click", ()=>cleanup(true));
+    overlay.addEventListener("click", e=>{ if(e.target===overlay) cleanup(false); });
+  });
+}
+
+async function purchasePro(){
+  // TODO: reemplazar esta simulación por la integración real de pago único (RevenueCat o Play Billing directo).
+  const ok = await showConfirm(t('simulatedPurchaseConfirm'));
+  if(!ok) return false;
+  setPro(true);
+  renderMenu();
+  renderLibrary();
+  renderSaved();
+  return true;
+}
+
+async function offerUpgrade(reason){
+  const wantsUpgrade = await showPaywallModal(reason);
+  if(wantsUpgrade) await purchasePro();
+}
+
+const LS = {
+  lib: "reformerPlanner_library_v2",
+  plan: "reformerPlanner_currentPlan",
+  saved: "reformerPlanner_savedPlans",
+  lists: "reformerPlanner_savedLists",
+  springColors: "reformerPlanner_springColors",
+  lang: "reformerPlanner_lang",
+  theme: "reformerPlanner_theme",
+  accent: "reformerPlanner_accentColor",
+  pro: "reformerPlanner_isPro"
+};
+function load(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+const isFirstLaunch = localStorage.getItem(LS.lang) === null;
+currentLang = load(LS.lang, "es");
+let currentTheme = load(LS.theme, "dark");
+document.documentElement.dataset.theme = currentTheme;
+document.documentElement.lang = currentLang;
+
+const DEFAULT_ACCENT = "#E3A23B";
+let accentColor = load(LS.accent, DEFAULT_ACCENT);
+
+const FREE_MAX_SAVED = 3;
+let isPro = load(LS.pro, false);
+function setPro(val){ isPro = !!val; save(LS.pro, isPro); }
+
+let library = load(LS.lib, [...MAT_DB, ...REFORMER_DB]);
+library = library.map(e=>({...e, props: Array.isArray(e.props) ? e.props.filter(pid=>PROPS_DB.some(p=>p.id===pid)) : []}));
+
+function normalizeItem(it){
+  const springs = {};
+  SPRINGS.forEach(s=>{ springs[s.k] = (it.springs && Number.isFinite(+it.springs[s.k])) ? +it.springs[s.k] : 0; });
+  let props = it.props;
+  props = Array.isArray(props) ? props.filter(pid=>PROPS_DB.some(p=>p.id===pid)) : [];
+  return {
+    n: it.n || t('unnamedExercise'),
+    apparatus: it.apparatus === "reformer" ? "reformer" : "mat",
+    straps: STRAPS_OPTS.includes(it.straps) ? it.straps : "N/A",
+    box: BOX_OPTS.includes(it.box) ? it.box : "N/A",
+    jump: !!it.jump,
+    props,
+    reps: Number.isFinite(+it.reps) ? +it.reps : 0,
+    seg: Number.isFinite(+it.seg) ? +it.seg : 0,
+    springs,
+    nota: typeof it.nota === "string" ? it.nota : "",
+    blockId: typeof it.blockId === "string" ? it.blockId : null
+  };
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+/* normaliza bloques + items de un plan, asegurando que cada blockId apunte a un bloque real */
+function normalizePlanShape(planObj){
+  const blocks = Array.isArray(planObj.blocks)
+    ? planObj.blocks.filter(b=>b && typeof b.id==="string").map(b=>({id:b.id, name: (typeof b.name==="string" && b.name.trim()) ? b.name.trim() : t('blockLabel')}))
+    : [];
+  const blockIds = new Set(blocks.map(b=>b.id));
+  const items = (planObj.items||[]).map(it=>{
+    const norm = normalizeItem(it);
+    if(norm.blockId && !blockIds.has(norm.blockId)) norm.blockId = null;
+    return norm;
+  });
+  return { blocks, items };
+}
+
+let plan = load(LS.plan, { name:t('defaultPlanName'), date:new Date().toISOString().slice(0,10), items:[], blocks:[] });
+{ const shaped = normalizePlanShape(plan); plan.items = shaped.items; plan.blocks = shaped.blocks; }
+
+let savedLists = load(LS.lists, []);
+savedLists = Array.isArray(savedLists) ? savedLists.filter(l=>l && typeof l.id==="string" && typeof l.name==="string") : [];
+
+let savedPlans = load(LS.saved, []);
+savedPlans = savedPlans.map(p=>{
+  const shaped = normalizePlanShape(p);
+  const listId = (typeof p.listId==="string" && savedLists.some(l=>l.id===p.listId)) ? p.listId : null;
+  return {...p, items:shaped.items, blocks:shaped.blocks, listId, favorite: !!p.favorite};
+});
+let activeGroupFilter = null;
+let activeApparatusFilter = "reformer";
+let editingSavedIndex = null;
+let newExPropsState = [];
+let activeListFilter = null;
+
+/* ---------- colores de resortes (personalizables) ---------- */
+const DEFAULT_SPRING_COLORS = { ligero:"#D9EAD3", medio:"#E8B23D", pesado:"#E08A3E", muypesado:"#D1483B" };
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k = n => (n + h/30) % 12;
+  const a = s * Math.min(l, 1-l);
+  const f = n => l - a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+  const toHex = x => Math.round(255*x).toString(16).padStart(2,"0");
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+}
+const PALETTE_HUES = [0,15,30,45,60,80,110,140,165,185,205,225,250,275,300,325,345];
+const PRESET_COLORS = [];
+PALETTE_HUES.forEach(h=>{
+  PRESET_COLORS.push(hslToHex(h,70,82), hslToHex(h,65,62), hslToHex(h,60,38));
+});
+PRESET_COLORS.push("#F2EFE9","#C9C5BB","#8A867C","#4A473F","#241B08");
+let springColors = load(LS.springColors, {...DEFAULT_SPRING_COLORS});
+SPRINGS.forEach(s=>{ if(!springColors[s.k]) springColors[s.k] = DEFAULT_SPRING_COLORS[s.k]; });
+let expandedSpringKey = null;
+
+function contrastColor(hex){
+  const c = hex.replace("#","");
+  const r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16);
+  const yiq = (r*299 + g*587 + b*114)/1000;
+  return yiq >= 140 ? "#241B08" : "#F2EFE9";
+}
+function applySpringColors(){
+  SPRINGS.forEach(s=>{
+    const hex = springColors[s.k] || DEFAULT_SPRING_COLORS[s.k];
+    document.documentElement.style.setProperty(`--spring-${s.k}`, hex);
+    document.documentElement.style.setProperty(`--spring-${s.k}-fg`, contrastColor(hex));
+  });
+}
+applySpringColors();
+
+function applyAccentColor(){
+  document.documentElement.style.setProperty("--accent", accentColor);
+  document.documentElement.style.setProperty("--accent-text", contrastColor(accentColor));
+}
+applyAccentColor();
+function setAccentColor(hex){
+  if(!/^#([0-9a-fA-F]{6})$/.test(hex)) return;
+  accentColor = hex;
+  save(LS.accent, hex);
+  applyAccentColor();
+}
+
+function setSpringColor(key, hex){
+  if(!/^#([0-9a-fA-F]{6})$/.test(hex)) return;
+  springColors[key] = hex;
+  save(LS.springColors, springColors);
+  applySpringColors();
+  renderSpringColors();
+  renderPlan();
+}
+
+const springColorList = document.getElementById("springColorList");
+function renderSpringColors(){
+  const stripHtml = `<div id="springGradientStrip" style="display:flex;border-radius:12px;overflow:hidden;height:36px;margin-bottom:14px;">${SPRINGS.map(s=>`<div style="flex:1;background:${springColors[s.k]};"></div>`).join("")}</div>`;
+
+  const rowsHtml = SPRINGS.map(s=>{
+    const hex = springColors[s.k];
+    return `
+    <details class="spring-row" data-key="${s.k}" ${expandedSpringKey===s.k ? "open" : ""}>
+      <summary>
+        <span class="spring-dot" style="background:${hex};"></span>
+        <span class="spring-row-label">${springLabel(s.k)}</span>
+        <span class="spring-row-hex">${hex}</span>
+        <svg class="spring-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </summary>
+      <div class="spring-row-body">
+        <input type="text" data-key="${s.k}" data-role="hex" value="${hex}" placeholder="#RRGGBB" class="spring-hex-input" style="width:100%; margin-bottom:10px;">
+        <details class="palette-details">
+          <summary>${t('viewPalette')}</summary>
+          <div class="swatch-grid">
+            ${PRESET_COLORS.map(c=>`<button type="button" class="swatch-sq" data-key="${s.k}" data-color="${c}" aria-label="${c}" style="background:${c}; border-color:${hex.toLowerCase()===c.toLowerCase() ? "var(--accent)" : "var(--border)"};"></button>`).join("")}
+          </div>
+        </details>
+      </div>
+    </details>`;
+  }).join("");
+
+  springColorList.innerHTML = stripHtml + rowsHtml;
+
+  springColorList.querySelectorAll(".spring-row").forEach(d=>d.addEventListener("toggle", ()=>{
+    if(d.open) expandedSpringKey = d.dataset.key;
+    else if(expandedSpringKey === d.dataset.key) expandedSpringKey = null;
+  }));
+  springColorList.querySelectorAll('input[data-role="hex"]').forEach(inp=>inp.addEventListener("change", ()=>{
+    const v = inp.value.trim();
+    if(/^#([0-9a-fA-F]{6})$/.test(v)) setSpringColor(inp.dataset.key, v);
+    else inp.value = springColors[inp.dataset.key];
+  }));
+  springColorList.querySelectorAll(".swatch-sq").forEach(b=>b.addEventListener("click", ()=>{
+    setSpringColor(b.dataset.key, b.dataset.color);
+  }));
+}
+document.getElementById("resetSpringColorsBtn").addEventListener("click", async ()=>{
+  const ok = await showConfirm(t('confirmResetColors'));
+  if(!ok) return;
+  springColors = {...DEFAULT_SPRING_COLORS};
+  save(LS.springColors, springColors);
+  applySpringColors();
+  renderSpringColors();
+  renderPlan();
+});
+
+/* ---------- helpers ---------- */
+function blankItem(ex){
+  const springs = {}; SPRINGS.forEach(s=>springs[s.k]=0);
+  return {
+    n: ex.n,
+    apparatus: ex.apparatus || "mat",
+    straps: ex.straps || "N/A",
+    box: ex.box || "N/A",
+    jump:false,
+    props: [...(ex.props||[])],
+    reps:10, seg:30, springs, nota:"", blockId:null
+  };
+}
+function persistPlan(){ save(LS.plan, plan); }
+function persistLib(){ save(LS.lib, library); }
+function persistSaved(){ save(LS.saved, savedPlans); }
+function persistSavedLists(){ save(LS.lists, savedLists); }
+function propName(id){ const m = PROP_LABELS[currentLang] || PROP_LABELS.es; return m[id] || id; }
+
+/* ---------- bloques ---------- */
+const BLOCK_PALETTE = ["#E3A23B","#6FA8DC","#93C47D","#C27BA0","#76A5AF","#E06666","#B48EAD","#F0B67F"];
+function blockColor(blocks, blockId){
+  const idx = blocks.findIndex(b=>b.id===blockId);
+  return BLOCK_PALETTE[idx>=0 ? idx % BLOCK_PALETTE.length : 0];
+}
+function findBlock(blockId){ return plan.blocks.find(b=>b.id===blockId); }
+
+async function addBlock(){
+  const name = await showPrompt(t('blockNamePrompt'), t('blockDefaultName', plan.blocks.length+1));
+  if(name===null) return;
+  const trimmed = name.trim();
+  if(!trimmed) return;
+  plan.blocks.push({id:uid(), name:trimmed});
+  persistPlan();
+  renderPlan();
+}
+document.getElementById("addBlockBtn").addEventListener("click", addBlock);
+
+async function renameBlock(blockId){
+  const b = findBlock(blockId);
+  if(!b) return;
+  const name = await showPrompt(t('blockRenamePrompt'), b.name);
+  if(name===null) return;
+  const trimmed = name.trim();
+  if(!trimmed) return;
+  b.name = trimmed;
+  persistPlan();
+  renderPlan();
+}
+async function removeBlock(blockId){
+  const ok = await showConfirm(t('confirmRemoveBlock'));
+  if(!ok) return;
+  plan.blocks = plan.blocks.filter(b=>b.id!==blockId);
+  plan.items.forEach(it=>{ if(it.blockId===blockId) it.blockId=null; });
+  persistPlan();
+  renderPlan();
+}
+function getBlockRun(items, blockId){
+  const start = items.findIndex(it=>it.blockId===blockId);
+  if(start===-1) return null;
+  let end = start;
+  while(end < items.length && items[end].blockId === blockId) end++;
+  return { start, end };
+}
+
+function moveBlock(blockId, dir){
+  const run = getBlockRun(plan.items, blockId);
+  if(!run) return;
+  const len = run.end - run.start;
+  if(dir < 0){
+    if(run.start === 0) return;
+    const prevItem = plan.items[run.start-1];
+    let insertAt;
+    if(prevItem.blockId){
+      insertAt = getBlockRun(plan.items, prevItem.blockId).start;
+    } else {
+      insertAt = run.start - 1;
+    }
+    const blockItems = plan.items.splice(run.start, len);
+    plan.items.splice(insertAt, 0, ...blockItems);
+  } else {
+    if(run.end >= plan.items.length) return;
+    const nextItem = plan.items[run.end];
+    let nextEnd;
+    if(nextItem.blockId){
+      nextEnd = getBlockRun(plan.items, nextItem.blockId).end;
+    } else {
+      nextEnd = run.end + 1;
+    }
+    const blockItems = plan.items.splice(run.start, len);
+    plan.items.splice(nextEnd - len, 0, ...blockItems);
+  }
+  persistPlan();
+  renderPlan();
+}
+
+function assignItemToBlock(i, blockId){
+  const it = plan.items[i];
+  if(!it) return;
+  if(!blockId){
+    it.blockId = null;
+    persistPlan();
+    renderPlan();
+    return;
+  }
+  it.blockId = blockId;
+  plan.items.splice(i,1);
+  let lastIdx = -1;
+  plan.items.forEach((x,idx)=>{ if(x.blockId===blockId) lastIdx = idx; });
+  plan.items.splice(lastIdx===-1 ? plan.items.length : lastIdx+1, 0, it);
+  persistPlan();
+  renderPlan();
+}
+
+/* agrupa items consecutivos que comparten blockId en bloques visuales */
+function buildGroupedHtml(items, blocks, cardRenderer, editable){
+  let html = "";
+  let idx = 0;
+  while(idx < items.length){
+    const it = items[idx];
+    if(it.blockId){
+      const block = blocks.find(b=>b.id===it.blockId);
+      const runStart = idx;
+      let runEnd = idx;
+      while(runEnd < items.length && items[runEnd].blockId === it.blockId) runEnd++;
+      const runItems = items.slice(runStart, runEnd);
+      const color = blockColor(blocks, it.blockId);
+      html += `
+      <div class="block-group" style="--border-block:${color};">
+        <div class="block-head">
+          <span class="bname">${escapeHtml(block ? block.name : t('blockLabel'))}</span>
+          ${editable ? `
+          <div class="block-actions">
+            <button class="icon-btn" data-act="block-up" data-bid="${it.blockId}" aria-label="${t('moveBlockUp')}" ${runStart===0?'style="opacity:.3; pointer-events:none;"':''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+            </button>
+            <button class="icon-btn" data-act="block-down" data-bid="${it.blockId}" aria-label="${t('moveBlockDown')}" ${runEnd===items.length?'style="opacity:.3; pointer-events:none;"':''}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <button class="icon-btn" data-act="rename-block" data-bid="${it.blockId}" aria-label="${t('renameBlockAria')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+            </button>
+            <button class="icon-btn" data-act="remove-block" data-bid="${it.blockId}" aria-label="${t('removeBlockAria')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>` : ""}
+        </div>
+        ${runItems.map((ri,k)=>cardRenderer(ri, runStart+k)).join("")}
+      </div>`;
+      idx = runEnd;
+    } else {
+      html += cardRenderer(it, idx);
+      idx++;
+    }
+  }
+  return html;
+}
+
+/* ---------- header ---------- */
+const headerInfo = document.getElementById("headerInfo");
+const headerTotal = document.getElementById("headerTotal");
+function updateHeaderVisibility(view){
+  const show = view === "clase";
+  headerInfo.style.display = show ? "" : "none";
+  headerTotal.style.display = show ? "" : "none";
+}
+
+/* ---------- menú: idioma y tema ---------- */
+function applyStaticTranslations(){
+  document.title = t('appTitle');
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+}
+
+function renderMenu(){
+  const menuDropdown = document.getElementById("menuDropdown");
+  menuDropdown.innerHTML = `
+    <div class="menu-section">
+      <p class="menu-section-label">${t('languageLabel')}</p>
+      <button type="button" class="menu-option ${currentLang==='es'?'on':''}" data-lang="es">
+        <span>Español</span>
+        <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <button type="button" class="menu-option ${currentLang==='en'?'on':''}" data-lang="en">
+        <span>English</span>
+        <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+    </div>
+    <div class="menu-section">
+      <p class="menu-section-label">${t('interfaceLabel')}</p>
+      <button type="button" class="menu-option ${currentTheme==='light'?'on':''}" data-theme-opt="light">
+        <span>${t('dayMode')}</span>
+        <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <button type="button" class="menu-option ${currentTheme==='dark'?'on':''}" data-theme-opt="dark">
+        <span>${t('nightMode')}</span>
+        <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+    </div>
+    <div class="menu-section">
+      <p class="menu-section-label">${t('mainColorLabel')}</p>
+      <button type="button" class="menu-option" id="openAccentColorBtn">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span style="width:14px; height:14px; border-radius:50%; background:${accentColor}; flex-shrink:0;"></span>
+          ${t('changeColor')}
+        </span>
+      </button>
+    </div>
+    <div class="menu-section">
+      <p class="menu-section-label">${t('proLabel')}</p>
+      ${isPro ? `
+        <button type="button" class="menu-option" id="proStatusBtn">
+          <span>${t('proActive')}</span>
+        </button>
+      ` : `
+        <button type="button" class="menu-option" id="upgradeBtn">
+          <span>${t('upgradeToPro')}</span>
+        </button>
+      `}
+    </div>
+  `;
+  menuDropdown.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click", ()=> setLanguage(b.dataset.lang)));
+  menuDropdown.querySelectorAll("[data-theme-opt]").forEach(b=>b.addEventListener("click", ()=> applyTheme(b.dataset.themeOpt)));
+  document.getElementById("openAccentColorBtn").addEventListener("click", ()=>{
+    menuDropdown.style.display = "none";
+    showAccentColorModal();
+  });
+  if(isPro){
+    document.getElementById("proStatusBtn").addEventListener("click", async ()=>{
+      menuDropdown.style.display = "none";
+      const ok = await showConfirm(t('devResetProConfirm'));
+      if(ok){ setPro(false); renderMenu(); renderLibrary(); renderSaved(); }
+    });
+  } else {
+    document.getElementById("upgradeBtn").addEventListener("click", ()=>{
+      menuDropdown.style.display = "none";
+      offerUpgrade(t('proGenericReason'));
+    });
+  }
+}
+
+function showAccentColorModal(){
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  function cleanup(){ overlay.remove(); }
+  function render(){
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <p class="modal-msg">${t('chooseAccentIntro')}</p>
+        <input type="text" id="accentHexInput" value="${accentColor}" placeholder="#RRGGBB" class="spring-hex-input" style="width:100%; margin-bottom:10px;">
+        <details class="palette-details" open>
+          <summary>${t('viewPalette')}</summary>
+          <div class="swatch-grid">
+            ${PRESET_COLORS.map(c=>`<button type="button" class="swatch-sq" data-color="${c}" aria-label="${c}" style="background:${c}; border-color:${accentColor.toLowerCase()===c.toLowerCase() ? "var(--accent)" : "var(--border)"};"></button>`).join("")}
+          </div>
+        </details>
+        <button type="button" class="btn" id="resetAccentBtn" style="margin-top:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3.5-7.1M21 4v6h-6"/></svg>
+          ${t('resetAccentColor')}
+        </button>
+        <div class="modal-actions">
+          <button type="button" class="btn modal-cancel" style="width:100%;">${t('cancel')}</button>
+        </div>
+      </div>`;
+    overlay.querySelector("#accentHexInput").addEventListener("change", e=>{
+      const v = e.target.value.trim();
+      if(/^#([0-9a-fA-F]{6})$/.test(v)){ setAccentColor(v); render(); }
+      else e.target.value = accentColor;
+    });
+    overlay.querySelectorAll(".swatch-sq").forEach(b=>b.addEventListener("click", ()=>{
+      setAccentColor(b.dataset.color);
+      render();
+    }));
+    overlay.querySelector("#resetAccentBtn").addEventListener("click", async ()=>{
+      const ok = await showConfirm(t('confirmResetAccent'));
+      if(!ok) return;
+      setAccentColor(DEFAULT_ACCENT);
+      render();
+    });
+    overlay.querySelector(".modal-cancel").addEventListener("click", cleanup);
+  }
+  render();
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", e=>{ if(e.target===overlay) cleanup(); });
+}
+
+function setLanguage(lang){
+  if(lang===currentLang){ document.getElementById("menuDropdown").style.display="none"; return; }
+  currentLang = lang;
+  save(LS.lang, lang);
+  document.documentElement.lang = lang;
+  applyStaticTranslations();
+  renderPlan();
+  renderLibrary();
+  renderSpringColors();
+  renderSaved();
+  renderMenu();
+  if(document.getElementById("view-detalle").classList.contains("active") && detalleIndex!==null) showDetalle(detalleIndex);
+  document.getElementById("menuDropdown").style.display="none";
+}
+
+function applyTheme(theme){
+  currentTheme = theme;
+  save(LS.theme, theme);
+  document.documentElement.dataset.theme = theme;
+  renderMenu();
+  document.getElementById("menuDropdown").style.display="none";
+}
+
+const menuBtn = document.getElementById("menuBtn");
+const menuDropdown = document.getElementById("menuDropdown");
+menuBtn.addEventListener("click", e=>{
+  e.stopPropagation();
+  const willOpen = menuDropdown.style.display !== "block";
+  menuDropdown.style.display = willOpen ? "block" : "none";
+  if(willOpen) renderMenu();
+});
+document.addEventListener("click", e=>{
+  if(!e.target.closest(".menu-wrap")) menuDropdown.style.display = "none";
+});
+
+/* ---------- splash de bienvenida (primera vez) ---------- */
+function hideSplash(){
+  const splash = document.getElementById("splashScreen");
+  if(!splash) return;
+  splash.classList.add("hide");
+  setTimeout(()=>{ splash.style.display = "none"; }, 500);
+}
+function selectSplashLanguage(lang){
+  currentLang = lang;
+  save(LS.lang, lang);
+  document.documentElement.lang = lang;
+  if(plan.name === I18N.es.defaultPlanName || plan.name === I18N.en.defaultPlanName){
+    plan.name = t('defaultPlanName');
+    persistPlan();
+    document.getElementById("planName").value = plan.name;
+  }
+  applyStaticTranslations();
+  renderPlan();
+  renderLibrary();
+  renderSpringColors();
+  renderSaved();
+  renderMenu();
+  hideSplash();
+}
+document.getElementById("splashEs").addEventListener("click", ()=> selectSplashLanguage("es"));
+document.getElementById("splashEn").addEventListener("click", ()=> selectSplashLanguage("en"));
+if(isFirstLaunch){
+  document.getElementById("splashScreen").style.display = "flex";
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("view-"+btn.dataset.view).classList.add("active");
+    if(btn.dataset.view==="clase") renderPlan();
+    if(btn.dataset.view==="biblioteca") renderLibrary();
+    if(btn.dataset.view==="resortes") renderSpringColors();
+    if(btn.dataset.view==="guardadas") renderSaved();
+    document.getElementById("fabSave").style.display = btn.dataset.view==="clase" ? "flex" : "none";
+    document.getElementById("fabEditDetalle").style.display = "none";
+    updateHeaderVisibility(btn.dataset.view);
+  });
+});
+
+/* ---------- header bindings ---------- */
+document.getElementById("planName").value = plan.name;
+document.getElementById("planDate").value = plan.date;
+document.getElementById("planName").addEventListener("input", e=>{ plan.name=e.target.value; persistPlan(); });
+document.getElementById("planDate").addEventListener("input", e=>{ plan.date=e.target.value; persistPlan(); });
+
+/* ---------- buscador / agregar a la clase ---------- */
+const searchBox = document.getElementById("searchBox");
+const results = document.getElementById("results");
+searchBox.addEventListener("input", renderSearchResults);
+searchBox.addEventListener("focus", renderSearchResults);
+document.addEventListener("click", e=>{
+  if(!e.target.closest(".search-wrap")) results.style.display="none";
+});
+function renderSearchResults(){
+  const q = searchBox.value.trim().toLowerCase();
+  if(!q){ results.style.display="none"; return; }
+  const matches = library.filter(e=>e.n.toLowerCase().includes(q)).slice(0,12);
+  const customMatches = matches.filter(e=>e.custom);
+  const classicMatches = matches.filter(e=>!e.custom);
+  const divider = txt => `<div style="padding:6px 12px; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); background:var(--surface-3);">${txt}</div>`;
+  const itemRow = e => `
+    <div class="result-item" data-id="${e.id}">
+      <span class="rname">${escapeHtml(e.n)}</span>
+      <span class="rtags">${apparatusLabel(e.apparatus)} · ${e.groups.slice(0,2).map(groupLabel).join(", ")}</span>
+    </div>`;
+  results.innerHTML =
+    (customMatches.length ? divider(t('yourExercises')) + customMatches.map(itemRow).join("") : "") +
+    (customMatches.length && classicMatches.length ? divider(t('classicLibrary')) : "") +
+    classicMatches.map(itemRow).join("")
+    || `<div class="result-item" style="color:var(--text-muted);">${t('noResults')}</div>`;
+  results.querySelectorAll(".result-item[data-id]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const ex = library.find(e=>e.id===el.dataset.id);
+      plan.items.push(blankItem(ex));
+      persistPlan();
+      searchBox.value=""; results.style.display="none";
+      renderPlan();
+    });
+
+  });
+  results.style.display="block";
+}
+
+/* ---------- renderizar tarjetas de la clase ---------- */
+const planList = document.getElementById("planList");
+const emptyPlan = document.getElementById("emptyPlan");
+
+function dominantSpringColor(springs){
+  let best=null, bestVal=0;
+  SPRINGS.forEach(s=>{ if(springs[s.k]>bestVal){ bestVal=springs[s.k]; best=s.k; } });
+  return best ? `var(--spring-${best})` : "var(--surface-3)";
+}
+
+function cardHtmlEditable(it, i){
+    const isReformer = it.apparatus === "reformer";
+    return `
+    <div class="card" style="border-left-color:${isReformer ? dominantSpringColor(it.springs) : 'var(--surface-3)'}">
+      <div class="card-head">
+        <span class="name">${escapeHtml(it.n)} <span class="tag apparatus" style="margin-left:4px;">${apparatusLabel(it.apparatus)}</span></span>
+        <div style="display:flex; gap:2px;">
+          <button class="icon-btn" data-act="up" data-i="${i}" aria-label="${t('moveUp')}" ${i===0?'style="opacity:.3; pointer-events:none;"':''}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button class="icon-btn" data-act="down" data-i="${i}" aria-label="${t('moveDown')}" ${i===plan.items.length-1?'style="opacity:.3; pointer-events:none;"':''}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <button class="icon-btn" data-act="remove" data-i="${i}" aria-label="${t('remove')}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:8px;">
+        <label>${t('blockLabel')}</label>
+        <select data-act="block-select" data-i="${i}">
+          <option value="">${t('noBlock')}</option>
+          ${plan.blocks.map(b=>`<option value="${b.id}" ${it.blockId===b.id?'selected':''}>${escapeHtml(b.name)}</option>`).join("")}
+        </select>
+      </div>
+
+      ${!isReformer ? '' : `
+      <div class="field-grid">
+        <div class="field">
+          <label>${t('strapsLabel')}</label>
+          <select data-act="straps-select" data-i="${i}">
+            ${STRAPS_OPTS.map(s=>`<option value="${s}" ${it.straps===s?'selected':''}>${strapsLabel(s)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label>${t('boxLabel')}</label>
+          <select data-act="box-select" data-i="${i}">
+            ${BOX_OPTS.map(b=>`<option value="${b}" ${it.box===b?'selected':''}>${boxLabel(b)}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="chip-row">
+        <button class="chip ${it.jump?'on':''}" data-act="jump" data-i="${i}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M4 10a4 4 0 018 0M12 20V4M12 4a4 4 0 018 0M20 20V8"/></svg>
+          ${it.jump?t('jumpboardYes'):t('jumpboardNo')}
+        </button>
+      </div>
+      `}
+
+      <div class="field-grid">
+        <div class="field">
+          <label>${t('repsLabel')}</label>
+          <input type="number" min="0" value="${it.reps}" data-field="reps" data-i="${i}">
+        </div>
+        <div class="field">
+          <label>${t('timeSecLabel')}</label>
+          <input type="number" min="0" value="${it.seg}" data-field="seg" data-i="${i}">
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:8px;">
+        <label>${t('propsLabel')}</label>
+        <select data-act="add-prop" data-i="${i}">
+          <option value="">${t('addPropOption')}</option>
+          ${PROPS_DB.filter(p=>!it.props.includes(p.id)).map(p=>`<option value="${p.id}">${propName(p.id)}</option>`).join("")}
+        </select>
+      </div>
+      ${it.props.length ? `
+      <div class="chip-row">
+        ${it.props.map(pid=>`
+          <button class="chip on" data-act="remove-prop" data-i="${i}" data-pid="${pid}">${propName(pid)} ✕</button>
+        `).join("")}
+      </div>` : ''}
+
+      ${!isReformer ? '' : `
+      <p class="section-label">${t('springsLabel')}</p>
+      <div class="springs-row">
+        ${SPRINGS.map(s=>`
+          <div class="spring" style="background:var(--spring-${s.k}); color:var(--spring-${s.k}-fg);">
+            <div class="slabel">${springLabel(s.k)}</div>
+            <div class="sctrl">
+              <button data-act="spring-" data-i="${i}" data-k="${s.k}" aria-label="${t('lessOf')} ${springLabel(s.k)}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/></svg>
+              </button>
+              <span class="sval">${it.springs[s.k]}</span>
+              <button data-act="spring+" data-i="${i}" data-k="${s.k}" aria-label="${t('moreOf')} ${springLabel(s.k)}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      `}
+
+      <textarea class="notes-input" rows="3" placeholder="${t('notesPlaceholder')}" data-field="nota" data-i="${i}">${escapeHtml(it.nota)}</textarea>
+    </div>
+  `;
+}
+
+function renderPlan(){
+  emptyPlan.style.display = plan.items.length ? "none":"block";
+  planList.innerHTML = buildGroupedHtml(plan.items, plan.blocks, cardHtmlEditable, true);
+  bindPlanEvents();
+  renderTotal();
+}
+
+function moveItem(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= plan.items.length) return;
+  [plan.items[i], plan.items[j]] = [plan.items[j], plan.items[i]];
+  persistPlan(); renderPlan();
+}
+
+function bindPlanEvents(){
+  planList.querySelectorAll('[data-act="remove"]').forEach(b=>b.addEventListener("click", ()=>{
+    plan.items.splice(+b.dataset.i,1); persistPlan(); renderPlan();
+  }));
+  planList.querySelectorAll('[data-act="up"]').forEach(b=>b.addEventListener("click", ()=> moveItem(+b.dataset.i, -1)));
+  planList.querySelectorAll('[data-act="down"]').forEach(b=>b.addEventListener("click", ()=> moveItem(+b.dataset.i, 1)));
+  planList.querySelectorAll('[data-act="straps-select"]').forEach(sel=>sel.addEventListener("change", ()=>{
+    plan.items[+sel.dataset.i].straps = sel.value; persistPlan();
+  }));
+  planList.querySelectorAll('[data-act="box-select"]').forEach(sel=>sel.addEventListener("change", ()=>{
+    plan.items[+sel.dataset.i].box = sel.value; persistPlan();
+  }));
+  planList.querySelectorAll('[data-act="block-select"]').forEach(sel=>sel.addEventListener("change", ()=>{
+    assignItemToBlock(+sel.dataset.i, sel.value || null);
+  }));
+  planList.querySelectorAll('[data-act="rename-block"]').forEach(b=>b.addEventListener("click", ()=> renameBlock(b.dataset.bid)));
+  planList.querySelectorAll('[data-act="remove-block"]').forEach(b=>b.addEventListener("click", ()=> removeBlock(b.dataset.bid)));
+  planList.querySelectorAll('[data-act="block-up"]').forEach(b=>b.addEventListener("click", ()=> moveBlock(b.dataset.bid, -1)));
+  planList.querySelectorAll('[data-act="block-down"]').forEach(b=>b.addEventListener("click", ()=> moveBlock(b.dataset.bid, 1)));
+  planList.querySelectorAll('[data-act="jump"]').forEach(b=>b.addEventListener("click", ()=>{
+    const it=plan.items[+b.dataset.i]; it.jump=!it.jump; persistPlan(); renderPlan();
+  }));
+  planList.querySelectorAll('[data-act="add-prop"]').forEach(sel=>sel.addEventListener("change", ()=>{
+    if(!sel.value) return;
+    const it=plan.items[+sel.dataset.i];
+    if(!it.props.includes(sel.value)) it.props.push(sel.value);
+    persistPlan(); renderPlan();
+  }));
+  planList.querySelectorAll('[data-act="remove-prop"]').forEach(b=>b.addEventListener("click", ()=>{
+    const it=plan.items[+b.dataset.i];
+    it.props = it.props.filter(p=>p!==b.dataset.pid);
+    persistPlan(); renderPlan();
+  }));
+  planList.querySelectorAll('[data-act="spring+"],[data-act="spring-"]').forEach(b=>b.addEventListener("click", ()=>{
+    const it=plan.items[+b.dataset.i]; const delta = b.dataset.act==="spring+" ? 1 : -1;
+    it.springs[b.dataset.k] = Math.max(0, it.springs[b.dataset.k]+delta);
+    persistPlan(); renderPlan();
+  }));
+  planList.querySelectorAll('[data-field]').forEach(inp=>inp.addEventListener("input", ()=>{
+    const it=plan.items[+inp.dataset.i]; const f=inp.dataset.field;
+    it[f] = (f==="reps"||f==="seg") ? (inp.value===""?0:+inp.value) : inp.value;
+    persistPlan();
+    if(f==="seg") renderTotal();
+  }));
+  planList.querySelectorAll('.notes-input').forEach(ta=>{
+    autoGrowTextarea(ta);
+    ta.addEventListener("input", ()=>autoGrowTextarea(ta));
+  });
+}
+
+function autoGrowTextarea(el){
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+function renderTotal(){
+  const totalSeg = plan.items.reduce((s,it)=>s+(+it.seg||0),0);
+  document.getElementById("totalTime").textContent = (totalSeg/60).toFixed(1)+" "+t('minUnit');
+}
+
+async function saveCurrentClass(){
+  if(editingSavedIndex !== null){
+    const ok = await showConfirm(t('confirmSaveChanges', plan.name));
+    if(!ok) return;
+    const existing = savedPlans[editingSavedIndex];
+    const snapshot = JSON.parse(JSON.stringify(plan));
+    snapshot.id = existing ? existing.id : Date.now().toString();
+    snapshot.favorite = existing ? !!existing.favorite : false;
+    snapshot.listId = existing ? (existing.listId || null) : null;
+    snapshot.savedAt = new Date().toISOString();
+    savedPlans[editingSavedIndex] = snapshot;
+    persistSaved();
+    const btn = document.getElementById("saveBtn");
+    const original = btn.innerHTML;
+    btn.innerHTML = t('changesSaved');
+    setTimeout(()=>btn.innerHTML=original, 1200);
+    const fab = document.getElementById("fabSave");
+    fab.classList.add("fab-done");
+    setTimeout(()=>fab.classList.remove("fab-done"), 1200);
+    return;
+  }
+  if(!isPro && savedPlans.length >= FREE_MAX_SAVED){
+    await offerUpgrade(t('proReasonSavedLimit'));
+    return;
+  }
+  const nameExists = n => savedPlans.some(p => p.name.trim().toLowerCase() === n.trim().toLowerCase());
+  let nameToSave = (plan.name || t('defaultPlanName')).trim();
+
+  while(nameExists(nameToSave)){
+    const proposed = await showPrompt(t('duplicateNamePrompt', nameToSave), nameToSave);
+    if(proposed === null) return; // canceló, no guarda
+    const trimmed = proposed.trim();
+    if(trimmed) nameToSave = trimmed;
+    // si dejó el campo vacío, vuelve a preguntar con el mismo nombre repetido
+  }
+
+  if(nameToSave !== plan.name){
+    plan.name = nameToSave;
+    document.getElementById("planName").value = nameToSave;
+    persistPlan();
+  }
+
+  const snapshot = JSON.parse(JSON.stringify(plan));
+  snapshot.id = Date.now().toString();
+  snapshot.favorite = false;
+  snapshot.listId = null;
+  snapshot.savedAt = new Date().toISOString();
+  savedPlans.unshift(snapshot);
+  persistSaved();
+
+  const btn = document.getElementById("saveBtn");
+  const original = btn.innerHTML;
+  btn.innerHTML = t('classSaved');
+  setTimeout(()=>btn.innerHTML=original, 1200);
+
+  const fab = document.getElementById("fabSave");
+  fab.classList.add("fab-done");
+  setTimeout(()=>fab.classList.remove("fab-done"), 1200);
+}
+document.getElementById("saveBtn").addEventListener("click", saveCurrentClass);
+document.getElementById("fabSave").addEventListener("click", saveCurrentClass);
+
+
+document.getElementById("newBtn").addEventListener("click", async ()=>{
+  if(plan.items.length){
+    const ok = await showConfirm(t('confirmNewClass'));
+    if(!ok) return;
+  }
+  plan = { name:t('defaultPlanName'), date:new Date().toISOString().slice(0,10), items:[], blocks:[] };
+  editingSavedIndex = null;
+  persistPlan();
+  document.getElementById("planName").value = plan.name;
+  document.getElementById("planDate").value = plan.date;
+  renderPlan();
+});
+
+/* ---------- biblioteca ---------- */
+const libSearch = document.getElementById("libSearch");
+const libList = document.getElementById("libList");
+const filterRow = document.getElementById("filterRow");
+const apparatusRow = document.getElementById("apparatusRow");
+const formBlock = document.getElementById("formBlock");
+
+function renderApparatusFilter(){
+  const opts = [["mat",t('filterMat')],["reformer",t('filterReformer')],["custom",t('filterCustom')]];
+  apparatusRow.innerHTML = opts.map(([id,label])=>`
+    <button class="filter-chip apparatus ${activeApparatusFilter===id?'on':''}" data-a="${id}">${label}</button>
+  `).join("");
+  apparatusRow.querySelectorAll(".filter-chip").forEach(b=>b.addEventListener("click", ()=>{
+    if(activeApparatusFilter === b.dataset.a) return;
+    activeApparatusFilter = b.dataset.a;
+    activeGroupFilter = null;
+    renderLibrary();
+  }));
+}
+function scopedLibrary(){
+  if(activeApparatusFilter === "custom") return library.filter(e=>e.custom);
+  return library.filter(e=>e.apparatus===activeApparatusFilter && !e.custom);
+}
+function allGroups(){
+  const s = new Set();
+  scopedLibrary().forEach(e=>e.groups.forEach(g=>s.add(g)));
+  return [...s].sort();
+}
+function renderFilters(){
+  filterRow.innerHTML = allGroups().map(g=>`
+    <button class="filter-chip ${activeGroupFilter===g?'on':''}" data-g="${g}">${groupLabel(g)}</button>
+  `).join("");
+  filterRow.querySelectorAll(".filter-chip").forEach(b=>b.addEventListener("click", ()=>{
+    activeGroupFilter = activeGroupFilter===b.dataset.g ? null : b.dataset.g;
+    renderFilters(); renderLibrary();
+  }));
+}
+function renderLibrary(){
+  renderApparatusFilter();
+  const isCustom = activeApparatusFilter === "custom";
+  filterRow.style.display = isCustom ? "none" : "flex";
+  formBlock.style.display = isCustom ? "block" : "none";
+  if(!isCustom) renderFilters();
+
+  const q = libSearch.value.trim().toLowerCase();
+  const filtered = scopedLibrary().filter(e=>{
+    const matchQ = !q || e.n.toLowerCase().includes(q);
+    const matchG = isCustom || !activeGroupFilter || e.groups.includes(activeGroupFilter);
+    return matchQ && matchG;
+  }).sort((a,b)=>a.order-b.order);
+
+  const itemHtml = e => `
+    <div class="lib-item">
+      <div class="lib-item-head">
+        <span class="name">${escapeHtml(e.n)}</span>
+        <button class="icon-btn" data-act="add-to-plan" data-id="${e.id}" aria-label="${t('addToClassAria')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="lib-tags">
+        <span class="tag apparatus">${apparatusLabel(e.apparatus)}</span>
+        ${e.groups.map(g=>`<span class="tag">${groupLabel(g)}</span>`).join("")}
+        ${e.props.map(pid=>`<span class="tag">${propName(pid)}</span>`).join("")}
+      </div>
+    </div>
+  `;
+
+  libList.innerHTML = filtered.length
+    ? filtered.map(itemHtml).join("")
+    : (isCustom
+        ? `<p style="color:var(--text-muted); font-size:12px;">${t('noCustomYet')}</p>`
+        : `<p style="color:var(--text-muted); font-size:13px;">${t('noFilterResults')}</p>`);
+
+  libList.querySelectorAll('[data-act="add-to-plan"]').forEach(b=>b.addEventListener("click", ()=>{
+    const ex = library.find(e=>e.id===b.dataset.id);
+    plan.items.push(blankItem(ex));
+    persistPlan();
+    renderTotal();
+    b.closest(".lib-item").style.borderColor = "var(--accent)";
+    setTimeout(()=>{ b.closest(".lib-item").style.borderColor = "var(--border)"; }, 500);
+  }));
+}
+libSearch.addEventListener("input", renderLibrary);
+
+
+function fillSelect(sel, opts, labelFn){ sel.innerHTML = opts.map(o=>`<option value="${o}">${labelFn?labelFn(o):o}</option>`).join(""); }
+function renderNewExOptionSelects(){
+  fillSelect(document.getElementById("newExStraps"), STRAPS_OPTS, strapsLabel);
+  fillSelect(document.getElementById("newExBox"), BOX_OPTS, boxLabel);
+}
+renderNewExOptionSelects();
+function renderNewExPropsRow(){
+  document.getElementById("newExPropsRow").innerHTML = PROPS_DB.map(p=>`
+    <button type="button" class="check-chip ${newExPropsState.includes(p.id)?'on':''}" data-pid="${p.id}">${propName(p.id)}</button>
+  `).join("");
+  document.querySelectorAll("#newExPropsRow .check-chip").forEach(b=>b.addEventListener("click", ()=>{
+    const idx = newExPropsState.indexOf(b.dataset.pid);
+    if(idx===-1) newExPropsState.push(b.dataset.pid); else newExPropsState.splice(idx,1);
+    renderNewExPropsRow();
+  }));
+}
+renderNewExPropsRow();
+
+document.getElementById("addLibBtn").addEventListener("click", async ()=>{
+  if(!isPro){
+    await offerUpgrade(t('proReasonCustomExercise'));
+    return;
+  }
+  const nameInput = document.getElementById("newExName");
+  const groupsInput = document.getElementById("newExGroups");
+  const apparatus = document.getElementById("newExApparatus").value;
+  const straps = document.getElementById("newExStraps").value;
+  const box = document.getElementById("newExBox").value;
+  const name = nameInput.value.trim();
+  if(!name) return;
+  const groups = groupsInput.value.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
+  const maxOrder = Math.max(0, ...library.filter(e=>e.apparatus===apparatus).map(e=>e.order));
+  library.push({
+    id: name.toLowerCase().replace(/[^a-z0-9]+/g,"-")+"-"+Date.now(),
+    n:name, order:maxOrder+1, apparatus,
+    groups: groups.length?groups:["general"],
+    straps, box, props:[...newExPropsState], custom:true
+  });
+  persistLib();
+  nameInput.value=""; groupsInput.value=""; newExPropsState=[];
+  renderNewExPropsRow();
+  renderLibrary();
+});
+
+function readonlyItemHtml(it){
+  const pill = txt => `<span style="font-size:12.5px; color:var(--text); background:var(--surface-3); padding:3px 10px; border-radius:20px; display:inline-block;">${txt}</span>`;
+  return `
+    <div class="card" style="border-left-color:${it.apparatus==='reformer'?dominantSpringColor(it.springs):'var(--surface-3)'}">
+      <div class="card-head"><span class="name">${escapeHtml(it.n)} <span class="tag apparatus" style="margin-left:4px;">${apparatusLabel(it.apparatus)}</span></span></div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:7px;">
+        ${it.apparatus==='reformer' ? pill(`${t('strapsLabel')}: ${strapsLabel(it.straps)}`)+pill(`${t('boxLabel')}: ${boxLabel(it.box)}`)+pill(`Jumpboard: ${it.jump?t('yes'):t('no')}`) : ''}
+        ${pill(`${it.reps} ${t('repsUnit')}`)}${pill(`${it.seg} ${t('segUnit')}`)}
+        ${it.props.map(pid=>pill(propName(pid))).join("")}
+      </div>
+      ${(it.apparatus==='reformer' && SPRINGS.some(s=>it.springs[s.k]>=1)) ? `<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:7px;">${SPRINGS.filter(s=>it.springs[s.k]>=1).map(s=>`<span style="font-size:12.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--spring-${s.k}); color:var(--spring-${s.k}-fg);">${springLabel(s.k)} ${it.springs[s.k]}</span>`).join("")}</div>` : ''}
+      ${it.nota ? `<p style="font-size:13.5px; color:var(--text); margin:0; font-style:italic; white-space:pre-wrap;">"${escapeHtml(it.nota)}"</p>` : ''}
+    </div>`;
+}
+let detalleIndex = null;
+function showDetalle(i){
+  detalleIndex = i;
+  const p = savedPlans[i];
+  document.getElementById("detalleName").textContent = p.name;
+  document.getElementById("detalleList").innerHTML = p.items.length ? buildGroupedHtml(p.items, p.blocks||[], readonlyItemHtml, false) : `<p style="color:var(--text-muted); font-size:13px;">${t('noExercisesInClass')}</p>`;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-detalle").classList.add("active");
+  document.getElementById("fabSave").style.display = "none";
+  document.getElementById("fabEditDetalle").style.display = "flex";
+  updateHeaderVisibility("detalle");
+}
+document.getElementById("backFromDetalle").addEventListener("click", ()=>{
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-guardadas").classList.add("active");
+  updateHeaderVisibility("guardadas");
+  document.getElementById("fabEditDetalle").style.display = "none";
+});
+document.getElementById("fabEditDetalle").addEventListener("click", ()=>{
+  const p = savedPlans[detalleIndex];
+  plan = { name:p.name, date:p.date, items: JSON.parse(JSON.stringify(p.items)), blocks: JSON.parse(JSON.stringify(p.blocks||[])) };
+  editingSavedIndex = detalleIndex;
+  persistPlan();
+  document.getElementById("planName").value = plan.name;
+  document.getElementById("planDate").value = plan.date;
+  document.getElementById("fabEditDetalle").style.display = "none";
+  document.querySelector('.tab[data-view="clase"]').click();
+  renderPlan();
+});
+
+/* ---------- guardadas ---------- */
+const savedList = document.getElementById("savedList");
+const emptySaved = document.getElementById("emptySaved");
+const savedFilterRow = document.getElementById("savedFilterRow");
+let savedSearchQuery = "";
+let showFavsOnly = false;
+document.getElementById("savedSearch").addEventListener("input", e=>{ savedSearchQuery = e.target.value.trim().toLowerCase(); renderSaved(); });
+
+function moveSavedItem(entries, pos, dir){
+  const j = pos + dir;
+  if(j < 0 || j >= entries.length) return;
+  const idxA = entries[pos].i, idxB = entries[j].i;
+  [savedPlans[idxA], savedPlans[idxB]] = [savedPlans[idxB], savedPlans[idxA]];
+  persistSaved();
+  renderSaved();
+}
+
+/* ---------- listas de clases guardadas ---------- */
+function findSavedList(id){ return savedLists.find(l=>l.id===id); }
+function savedListName(id){ const l = findSavedList(id); return l ? l.name : ""; }
+
+async function addSavedList(){
+  const name = await showPrompt(t('newListPrompt'), "");
+  if(name===null) return null;
+  const trimmed = name.trim();
+  if(!trimmed) return null;
+  const list = { id: uid(), name: trimmed };
+  savedLists.push(list);
+  persistSavedLists();
+  return list.id;
+}
+async function renameSavedList(id){
+  const l = findSavedList(id);
+  if(!l) return;
+  const name = await showPrompt(t('renameListPrompt'), l.name);
+  if(name===null) return;
+  const trimmed = name.trim();
+  if(!trimmed) return;
+  l.name = trimmed;
+  persistSavedLists();
+}
+async function removeSavedList(id){
+  const ok = await showConfirm(t('confirmRemoveList'));
+  if(!ok) return;
+  savedLists = savedLists.filter(l=>l.id!==id);
+  persistSavedLists();
+  savedPlans.forEach(p=>{ if(p.listId===id) p.listId=null; });
+  persistSaved();
+  if(activeListFilter===id) activeListFilter = null;
+}
+
+function showListPickerModal(currentListId){
+  return new Promise(resolve=>{
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    function cleanup(result){ overlay.remove(); resolve(result); }
+    function render(){
+      overlay.innerHTML = `
+        <div class="modal-box">
+          <p class="modal-msg">${t('chooseListIntro')}</p>
+          <button type="button" class="filter-chip ${!currentListId?'on':''}" data-assign="" style="width:100%; text-align:left; margin-bottom:8px;">${t('noList')}</button>
+          <div id="listOptionsWrap"></div>
+          <button type="button" class="btn" id="addListBtnInModal" style="margin-bottom:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            ${t('newListChip')}
+          </button>
+          <div class="modal-actions">
+            <button type="button" class="btn modal-cancel" style="width:100%;">${t('cancel')}</button>
+          </div>
+        </div>`;
+      const wrap = overlay.querySelector("#listOptionsWrap");
+      wrap.innerHTML = savedLists.map(l=>`
+        <div style="display:flex; align-items:center; gap:4px; margin-bottom:6px;">
+          <button type="button" class="filter-chip ${currentListId===l.id?'on':''}" data-assign="${l.id}" style="flex:1; text-align:left;">${escapeHtml(l.name)}</button>
+          <button type="button" class="icon-btn" data-rename="${l.id}" aria-label="${t('renameListAria')}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+          <button type="button" class="icon-btn" data-remove="${l.id}" aria-label="${t('removeListAria')}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join("");
+
+      overlay.querySelectorAll('[data-assign]').forEach(b=>b.addEventListener("click", ()=>cleanup({assign:b.dataset.assign})));
+      overlay.querySelectorAll('[data-rename]').forEach(b=>b.addEventListener("click", async e=>{
+        e.stopPropagation();
+        await renameSavedList(b.dataset.rename);
+        render();
+      }));
+      overlay.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener("click", async e=>{
+        e.stopPropagation();
+        await removeSavedList(b.dataset.remove);
+        if(currentListId === b.dataset.remove) currentListId = null;
+        render();
+      }));
+      overlay.querySelector("#addListBtnInModal").addEventListener("click", async ()=>{
+        const newId = await addSavedList();
+        if(newId){ cleanup({assign:newId}); }
+        else render();
+      });
+      overlay.querySelector(".modal-cancel").addEventListener("click", ()=>cleanup(null));
+    }
+    render();
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", e=>{ if(e.target===overlay) cleanup(null); });
+  });
+}
+
+function renderSaved(){
+  savedFilterRow.innerHTML = `
+    <button class="filter-chip ${showFavsOnly?'on':''}" id="favToggleChip">${t('favoritesChip')}</button>
+    ${savedLists.map(l=>`<button class="filter-chip ${activeListFilter===l.id?'on':''}" data-list-filter="${l.id}">${escapeHtml(l.name)}</button>`).join("")}
+    <button class="filter-chip" id="addListChip">+ ${t('newListChip')}</button>
+  `;
+  document.getElementById("favToggleChip").addEventListener("click", ()=>{ showFavsOnly = !showFavsOnly; renderSaved(); });
+  savedFilterRow.querySelectorAll('[data-list-filter]').forEach(b=>b.addEventListener("click", ()=>{
+    const id = b.dataset.listFilter;
+    activeListFilter = activeListFilter===id ? null : id;
+    renderSaved();
+  }));
+  document.getElementById("addListChip").addEventListener("click", async ()=>{
+    await addSavedList();
+    renderSaved();
+  });
+
+  const entries = savedPlans.map((p,i)=>({p,i})).filter(({p})=>{
+    const matchQ = !savedSearchQuery || p.name.toLowerCase().includes(savedSearchQuery);
+    const matchFav = !showFavsOnly || p.favorite;
+    const matchList = !activeListFilter || p.listId === activeListFilter;
+    return matchQ && matchFav && matchList;
+  });
+
+  emptySaved.style.display = entries.length ? "none":"block";
+  savedList.innerHTML = entries.map(({p,i},pos)=>{
+    const totalSeg = p.items.reduce((s,it)=>s+(+it.seg||0),0);
+    const dateLabel = new Date(p.savedAt).toLocaleDateString(t('dateLocale'),{day:"numeric",month:"short",year:"numeric"});
+    return `
+    <div class="saved-item">
+      <div class="info">
+        <p class="sname">${escapeHtml(p.name)}</p>
+        <p class="smeta">${t('metaLine', dateLabel, p.items.length, (totalSeg/60).toFixed(1))}</p>
+        ${p.listId ? `<span class="tag" style="margin-top:4px; display:inline-block;">${escapeHtml(savedListName(p.listId))}</span>` : ''}
+      </div>
+      <div class="saved-actions">
+        <button class="icon-btn" data-act="saved-up" data-pos="${pos}" aria-label="${t('moveUp')}" ${pos===0?'style="opacity:.3; pointer-events:none;"':''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
+        <button class="icon-btn" data-act="saved-down" data-pos="${pos}" aria-label="${t('moveDown')}" ${pos===entries.length-1?'style="opacity:.3; pointer-events:none;"':''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <button class="icon-btn" data-act="list" data-i="${i}" aria-label="${t('assignListAria')}" style="color:${p.listId?'var(--accent)':'var(--text-muted)'};">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41L11 3.83A2 2 0 009.59 3.24L4 3a1 1 0 00-1 1l.24 5.59a2 2 0 00.59 1.41l9.58 9.58a2 2 0 002.82 0l4.36-4.36a2 2 0 000-2.82z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="icon-btn" data-act="fav" data-i="${i}" aria-label="${p.favorite?t('unmarkFavoriteAria'):t('markFavoriteAria')}" style="color:${p.favorite?'var(--accent)':'var(--text-muted)'};">
+          <svg viewBox="0 0 24 24" fill="${p.favorite?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9-6.2-3.3-6.2 3.3 1.2-6.9-5-4.9 6.9-1z"/></svg>
+        </button>
+        <button class="icon-btn" data-act="view" data-i="${i}" aria-label="${t('viewClassAria')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="icon-btn" data-act="load" data-i="${i}" aria-label="${t('editClassAria')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+        </button>
+        <button class="icon-btn" data-act="del" data-i="${i}" aria-label="${t('deleteSavedAria')}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join("");
+
+  savedList.querySelectorAll('[data-act="saved-up"]').forEach(b=>b.addEventListener("click", ()=> moveSavedItem(entries, +b.dataset.pos, -1)));
+  savedList.querySelectorAll('[data-act="saved-down"]').forEach(b=>b.addEventListener("click", ()=> moveSavedItem(entries, +b.dataset.pos, 1)));
+  savedList.querySelectorAll('[data-act="list"]').forEach(b=>b.addEventListener("click", async ()=>{
+    const idx = +b.dataset.i;
+    const result = await showListPickerModal(savedPlans[idx].listId);
+    if(result){
+      savedPlans[idx].listId = result.assign || null;
+      persistSaved();
+    }
+    renderSaved();
+  }));
+  savedList.querySelectorAll('[data-act="fav"]').forEach(b=>b.addEventListener("click", ()=>{
+    savedPlans[+b.dataset.i].favorite = !savedPlans[+b.dataset.i].favorite;
+    persistSaved(); renderSaved();
+  }));
+  savedList.querySelectorAll('[data-act="view"]').forEach(b=>b.addEventListener("click", ()=> showDetalle(+b.dataset.i)));
+  savedList.querySelectorAll('[data-act="load"]').forEach(b=>b.addEventListener("click", ()=>{
+    const p = savedPlans[+b.dataset.i];
+    plan = { name:p.name, date:p.date, items: JSON.parse(JSON.stringify(p.items)), blocks: JSON.parse(JSON.stringify(p.blocks||[])) };
+    editingSavedIndex = +b.dataset.i;
+    persistPlan();
+    document.getElementById("planName").value = plan.name;
+    document.getElementById("planDate").value = plan.date;
+    document.querySelector('.tab[data-view="clase"]').click();
+    renderPlan();
+  }));
+  savedList.querySelectorAll('[data-act="del"]').forEach(b=>b.addEventListener("click", async ()=>{
+    const ok = await showConfirm(t('confirmDeleteSaved'));
+    if(!ok) return;
+    savedPlans.splice(+b.dataset.i,1); persistSaved(); renderSaved();
+  }));
+}
+
+/* ---------- tour de ayuda ---------- */
+function ensureLibApparatusForTour(){
+  if(activeApparatusFilter === "custom"){
+    const chip = document.querySelector('[data-a="reformer"]');
+    if(chip) chip.click();
+  }
+}
+function ensureLibCustomForTour(){
+  if(activeApparatusFilter !== "custom"){
+    const chip = document.querySelector('[data-a="custom"]');
+    if(chip) chip.click();
+  }
+}
+function ensureSpringRowOpenForTour(){
+  const d = document.querySelector(".spring-row");
+  if(d) d.open = true;
+}
+
+const TOUR_STEPS = {
+  clase: [
+    { sel: "#searchBox", key: "tour_clase_search" },
+    { sel: "#addBlockBtn", key: "tour_clase_addblock" },
+    { sel: '#planList [data-act="up"]', key: "tour_clase_cardmove" },
+    { sel: '#planList [data-act="block-select"]', key: "tour_clase_blockselect" },
+    { sel: '#planList [data-act="straps-select"]', key: "tour_clase_straps" },
+    { sel: '#planList [data-field="reps"]', key: "tour_clase_reps" },
+    { sel: '#planList [data-act="add-prop"]', key: "tour_clase_props" },
+    { sel: '#planList [data-act="spring+"]', key: "tour_clase_springs" },
+    { sel: "#planList .notes-input", key: "tour_clase_notes" },
+    { sel: "#saveBtn", key: "tour_clase_save" }
+  ],
+  biblioteca: [
+    { sel: "#libSearch", key: "tour_bib_search", before: ensureLibApparatusForTour },
+    { sel: "#apparatusRow .filter-chip", key: "tour_bib_apparatus", before: ensureLibApparatusForTour },
+    { sel: "#filterRow .filter-chip", key: "tour_bib_groups", before: ensureLibApparatusForTour },
+    { sel: '#libList [data-act="add-to-plan"]', key: "tour_bib_add", before: ensureLibApparatusForTour },
+    { sel: "#newExName", key: "tour_bib_customname", before: ensureLibCustomForTour },
+    { sel: "#newExApparatus", key: "tour_bib_customapparatus", before: ensureLibCustomForTour },
+    { sel: "#newExGroups", key: "tour_bib_customgroups", before: ensureLibCustomForTour },
+    { sel: "#newExPropsRow .check-chip", key: "tour_bib_customprops", before: ensureLibCustomForTour },
+    { sel: "#addLibBtn", key: "tour_bib_customadd", before: ensureLibCustomForTour }
+  ],
+  resortes: [
+    { sel: "#springGradientStrip", key: "tour_res_strip" },
+    { sel: ".spring-row summary", key: "tour_res_row" },
+    { sel: ".spring-row .spring-hex-input", key: "tour_res_hex", before: ensureSpringRowOpenForTour },
+    { sel: ".palette-details summary", key: "tour_res_palette", before: ensureSpringRowOpenForTour },
+    { sel: "#resetSpringColorsBtn", key: "tour_res_reset" }
+  ],
+  guardadas: [
+    { sel: "#savedSearch", key: "tour_gua_search" },
+    { sel: "#favToggleChip", key: "tour_gua_fav" },
+    { sel: "#addListChip", key: "tour_gua_lists" },
+    { sel: '#savedList [data-act="saved-up"]', key: "tour_gua_move" },
+    { sel: '#savedList [data-act="list"]', key: "tour_gua_list" },
+    { sel: '#savedList [data-act="fav"]', key: "tour_gua_star" },
+    { sel: '#savedList [data-act="view"]', key: "tour_gua_actions" }
+  ]
+};
+
+let tourState = null;
+
+function currentActiveView(){
+  const activeTab = document.querySelector(".tab.active");
+  return activeTab ? activeTab.dataset.view : null;
+}
+
+function startTour(){
+  const view = currentActiveView();
+  const steps = TOUR_STEPS[view];
+  if(!steps || !steps.length) return;
+  tourState = { steps, index: 0 };
+  showTourStep();
+}
+
+function closeTour(){
+  tourState = null;
+  ["tourHighlight","tourCallout","tourCloseBtn","tourBlocker"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.remove();
+  });
+}
+
+function showTourStep(){
+  if(!tourState) return;
+  const step = tourState.steps[tourState.index];
+  if(step.before) step.before();
+  const el = document.querySelector(step.sel);
+  if(!el){
+    if(tourState.index < tourState.steps.length-1){
+      tourState.index++;
+      showTourStep();
+    } else {
+      closeTour();
+    }
+    return;
+  }
+  el.scrollIntoView({ block:"center", behavior:"instant" });
+  setTimeout(()=>positionTourStep(el), 60);
+}
+
+function positionTourStep(el){
+  if(!tourState) return;
+  const step = tourState.steps[tourState.index];
+  const r = el.getBoundingClientRect();
+  const pad = 6;
+
+  let blocker = document.getElementById("tourBlocker");
+  if(!blocker){
+    blocker = document.createElement("div");
+    blocker.id = "tourBlocker";
+    blocker.className = "tour-blocker";
+    blocker.addEventListener("click", closeTour);
+    document.body.appendChild(blocker);
+  }
+
+  let hl = document.getElementById("tourHighlight");
+  if(!hl){ hl = document.createElement("div"); hl.id = "tourHighlight"; hl.className = "tour-highlight"; document.body.appendChild(hl); }
+  hl.style.top = (r.top-pad)+"px";
+  hl.style.left = (r.left-pad)+"px";
+  hl.style.width = (r.width+pad*2)+"px";
+  hl.style.height = (r.height+pad*2)+"px";
+
+  let cl = document.getElementById("tourCloseBtn");
+  if(!cl){
+    cl = document.createElement("button");
+    cl.id = "tourCloseBtn";
+    cl.className = "tour-close";
+    cl.addEventListener("click", closeTour);
+    document.body.appendChild(cl);
+  }
+  cl.setAttribute("aria-label", t("tourCloseAria"));
+  cl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+  let co = document.getElementById("tourCallout");
+  if(!co){ co = document.createElement("div"); co.id = "tourCallout"; co.className = "tour-callout"; document.body.appendChild(co); }
+  const isLast = tourState.index === tourState.steps.length-1;
+  co.innerHTML = `
+    <p>${t(step.key)}</p>
+    <div class="tour-nav">
+      <span class="tour-step-label">${t("tourStepOf", tourState.index+1, tourState.steps.length)}</span>
+      <div class="tour-btns">
+        <button type="button" class="tour-btn" id="tourPrevBtn" ${tourState.index===0?"disabled":""}>${t("tourPrev")}</button>
+        <button type="button" class="tour-btn primary" id="tourNextBtn">${isLast?t("tourDone"):t("tourNext")}</button>
+      </div>
+    </div>`;
+
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const coRect = co.getBoundingClientRect();
+  let top = r.bottom + pad + 10;
+  if(top + coRect.height > vh - 12) top = r.top - pad - 10 - coRect.height;
+  if(top < 12) top = 12;
+  let left = r.left;
+  if(left + coRect.width > vw - 12) left = vw - coRect.width - 12;
+  if(left < 12) left = 12;
+  co.style.top = top+"px";
+  co.style.left = left+"px";
+
+  document.getElementById("tourPrevBtn").addEventListener("click", ()=>{
+    if(tourState.index>0){ tourState.index--; showTourStep(); }
+  });
+  document.getElementById("tourNextBtn").addEventListener("click", ()=>{
+    if(tourState.index < tourState.steps.length-1){ tourState.index++; showTourStep(); }
+    else closeTour();
+  });
+}
+
+document.getElementById("helpTourBtn").addEventListener("click", startTour);
+
+/* ---------- utils ---------- */
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- init ---------- */
+applyStaticTranslations();
+renderPlan();
+</script>
+</body>
+</html>
